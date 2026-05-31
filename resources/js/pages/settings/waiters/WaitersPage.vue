@@ -62,7 +62,7 @@
               style="border-color:var(--border)"
             >
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ waiter.waiterCode }}</span>
+                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ waiter.waiter_code }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-xs" style="color:var(--foreground)">{{ waiter.name }}</span>
@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Search as SearchIcon, X as XIcon, Plus as PlusIcon,
   Edit as EditIcon, Trash2 as Trash2Icon,
@@ -135,9 +135,10 @@ import {
 } from '@lucide/vue';
 import WaiterFormModal   from './WaiterFormModal.vue';
 import WaiterDeleteModal from './WaiterDeleteModal.vue';
+import { waiterApi } from '@/services/settingsApi';
 
 const search   = ref('');
-const sortKey  = ref('waiterCode');
+const sortKey  = ref('waiter_code');
 const sortDir  = ref('asc');
 const page     = ref(1);
 const pageSize = ref(10);
@@ -145,33 +146,28 @@ const pageSize = ref(10);
 const showFormModal  = ref(false);
 const editingWaiter  = ref(null);
 const deletingWaiter = ref(null);
+const loading        = ref(false);
 
-const waiters = ref([
-  { id: 1,  waiterCode: 'W1',  name: 'Ram',      dob: '19-06-1998', mobile: '9876543210' },
-  { id: 2,  waiterCode: 'W2',  name: 'Priya',    dob: '05-03-1995', mobile: '9823456781' },
-  { id: 3,  waiterCode: 'W3',  name: 'Arjun',    dob: '22-11-1997', mobile: '9712345678' },
-  { id: 4,  waiterCode: 'W4',  name: 'Sneha',    dob: '14-07-2000', mobile: '9654321098' },
-  { id: 5,  waiterCode: 'W5',  name: 'Karthik',  dob: '30-01-1993', mobile: '9543210987' },
-  { id: 6,  waiterCode: 'W6',  name: 'Divya',    dob: '08-09-1999', mobile: '9432109876' },
-  { id: 7,  waiterCode: 'W7',  name: 'Suresh',   dob: '17-04-1996', mobile: '9321098765' },
-  { id: 8,  waiterCode: 'W8',  name: 'Meena',    dob: '25-12-2001', mobile: '9210987654' },
-  { id: 9,  waiterCode: 'W9',  name: 'Vijay',    dob: '11-02-1994', mobile: '9109876543' },
-  { id: 10, waiterCode: 'W10', name: 'Lakshmi',  dob: '03-08-1998', mobile: '9098765432' },
-]);
+const waiters = ref([]);
+
+onMounted(async () => {
+  loading.value = true;
+  try { waiters.value = await waiterApi.getAll(); } finally { loading.value = false; }
+});
 
 const columns = [
-  { key: 'waiterCode', label: 'Waiter Code' },
-  { key: 'name',       label: 'Name' },
-  { key: 'dob',        label: 'DOB' },
-  { key: 'mobile',     label: 'Mobile' },
+  { key: 'waiter_code', label: 'Waiter Code' },
+  { key: 'name',        label: 'Name' },
+  { key: 'dob',         label: 'DOB' },
+  { key: 'mobile',      label: 'Mobile' },
 ];
 
 const filtered = computed(() => {
   let data = waiters.value.filter(w =>
     !search.value ||
-    w.waiterCode.toLowerCase().includes(search.value.toLowerCase()) ||
-    w.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    w.mobile.includes(search.value)
+    (w.waiter_code || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (w.name || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (w.mobile || '').includes(search.value)
   );
   if (sortKey.value) {
     data = [...data].sort((a, b) => {
@@ -204,19 +200,27 @@ function openEdit(waiter)  { editingWaiter.value = waiter; showFormModal.value =
 function closeFormModal()  { showFormModal.value = false; editingWaiter.value = null; }
 function openDelete(waiter){ deletingWaiter.value = waiter; }
 
-function saveWaiter(data) {
-  if (editingWaiter.value) {
-    const idx = waiters.value.findIndex(w => w.id === editingWaiter.value.id);
-    if (idx !== -1) waiters.value[idx] = { ...waiters.value[idx], ...data };
-  } else {
-    const nextCode = 'W' + (waiters.value.length + 1);
-    waiters.value.push({ id: Date.now(), waiterCode: data.waiterCode || nextCode, ...data });
+async function saveWaiter(data) {
+  try {
+    if (editingWaiter.value) {
+      const updated = await waiterApi.update(editingWaiter.value.id, data);
+      const idx = waiters.value.findIndex(w => w.id === editingWaiter.value.id);
+      if (idx !== -1) waiters.value[idx] = updated;
+    } else {
+      const created = await waiterApi.create(data);
+      waiters.value.push(created);
+    }
+    closeFormModal();
+  } catch (e) {
+    alert(e?.errors ? Object.values(e.errors).flat().join('\n') : 'Save failed');
   }
-  closeFormModal();
 }
 
-function confirmDelete() {
-  waiters.value = waiters.value.filter(w => w.id !== deletingWaiter.value.id);
-  deletingWaiter.value = null;
+async function confirmDelete() {
+  try {
+    await waiterApi.remove(deletingWaiter.value.id);
+    waiters.value = waiters.value.filter(w => w.id !== deletingWaiter.value.id);
+    deletingWaiter.value = null;
+  } catch { alert('Delete failed'); }
 }
 </script>

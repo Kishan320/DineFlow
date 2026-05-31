@@ -1,12 +1,12 @@
 <template>
   <div class="p-4 lg:p-6 xl:p-8 max-w-screen-xl mx-auto">
     <div class="flex items-center gap-3 mb-6">
-      <button @click="$emit('back')" class="p-1.5 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)">
+      <button @click="router.push({ name: 'settings-items' })" class="p-1.5 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)">
         <ArrowLeftIcon :size="16" />
       </button>
       <div>
-        <h1 class="text-2xl font-bold" style="color:var(--foreground)">{{ item ? 'Edit Item' : 'Create Item' }}</h1>
-        <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Items · {{ item ? 'Edit' : 'New' }}</p>
+        <h1 class="text-2xl font-bold" style="color:var(--foreground)">{{ isEdit ? 'Edit Item' : 'Create Item' }}</h1>
+        <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Items · {{ isEdit ? 'Edit' : 'New' }}</p>
       </div>
     </div>
 
@@ -128,9 +128,9 @@
         <!-- Actions -->
         <div class="flex items-center gap-3 pt-2">
           <button type="submit" class="px-6 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--primary);color:var(--primary-foreground)">
-            {{ item ? 'Update' : 'Save' }}
+            {{ isEdit ? 'Update' : 'Save' }}
           </button>
-          <button type="button" @click="$emit('back')" class="px-6 py-2 rounded-lg text-sm font-medium border transition-colors hover:bg-muted" style="border-color:var(--border);color:var(--foreground)">Cancel</button>
+          <button type="button" @click="router.push({ name: 'settings-items' })" class="px-6 py-2 rounded-lg text-sm font-medium border transition-colors hover:bg-muted" style="border-color:var(--border);color:var(--foreground)">Cancel</button>
         </div>
 
       </form>
@@ -139,11 +139,16 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft as ArrowLeftIcon, ImageOff as ImageOffIcon, Trash2 as Trash2Icon } from '@lucide/vue';
+import { items } from './itemsStore.js';
 
-const props = defineProps({ item: { type: Object, default: null } });
-const emit  = defineEmits(['back', 'save']);
+const router = useRouter();
+const route  = useRoute();
+
+const isEdit = computed(() => !!route.params.id);
+const item   = computed(() => isEdit.value ? items.value.find(i => i.id == route.params.id) : null);
 
 const categoryOptions = [
   'New Menu June', 'Break Fast Combo', 'Hot Beverage', 'Briyani Chicken',
@@ -162,16 +167,12 @@ const imagePreview = ref('');
 const fileName     = ref('');
 const fileInput    = ref(null);
 
-watch(() => props.item, (i) => {
-  if (i) {
-    Object.assign(form, { code: i.code, itemName: i.itemName, category: i.category, restaurantPrice: i.restaurantPrice, barPrice: i.barPrice, roomPrice: i.roomPrice, taxType: i.taxType, tax: i.tax, state: i.state, itemType: i.itemType, note: i.note || '', imageUrl: i.imageUrl || '' });
-    imagePreview.value = i.imageUrl || '';
-  } else {
-    Object.assign(form, blankForm());
-    imagePreview.value = '';
-    fileName.value = '';
+onMounted(() => {
+  if (item.value) {
+    Object.assign(form, { ...item.value });
+    imagePreview.value = item.value.imageUrl || '';
   }
-}, { immediate: true });
+});
 
 function onFileChange(e) {
   const file = e.target.files[0];
@@ -190,6 +191,13 @@ function removeImage() {
 }
 
 function submit() {
-  emit('save', { ...form });
+  const now = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+  if (isEdit.value) {
+    const idx = items.value.findIndex(i => i.id == route.params.id);
+    if (idx !== -1) items.value[idx] = { ...items.value[idx], ...form, lastAccessedBy: 'Administrator', lastAccessedAt: now };
+  } else {
+    items.value.push({ id: Date.now(), ...form, lastAccessedBy: 'Administrator', lastAccessedAt: now, createdAt: now });
+  }
+  router.push({ name: 'settings-items' });
 }
 </script>

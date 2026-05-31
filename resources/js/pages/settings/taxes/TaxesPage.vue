@@ -53,18 +53,18 @@
               style="border-color:var(--border)"
             >
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ tax.hsnCode }}</span>
+                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ tax.hsn_code }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-xs" style="color:var(--foreground)">{{ tax.description }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs tabular-nums" style="color:var(--foreground)">{{ tax.taxPercent.toFixed(2) }}</span>
+                <span class="text-xs tabular-nums" style="color:var(--foreground)">{{ parseFloat(tax.tax_percent).toFixed(2) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex flex-col">
-                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ tax.lastAccessedBy }}</span>
-                  <span class="text-xs" style="color:var(--muted-foreground)">{{ tax.lastAccessedAt }}</span>
+                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ tax.last_accessed_by }}</span>
+                  <span class="text-xs" style="color:var(--muted-foreground)">{{ tax.updated_at ? new Date(tax.updated_at).toLocaleString('en-IN') : '' }}</span>
                 </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
@@ -120,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Search as SearchIcon, X as XIcon, Plus as PlusIcon,
   Edit as EditIcon, Trash2 as Trash2Icon,
@@ -129,9 +129,10 @@ import {
 } from '@lucide/vue';
 import TaxFormModal   from './TaxFormModal.vue';
 import TaxDeleteModal from './TaxDeleteModal.vue';
+import { taxApi } from '@/services/settingsApi';
 
 const search   = ref('');
-const sortKey  = ref('hsnCode');
+const sortKey  = ref('hsn_code');
 const sortDir  = ref('asc');
 const page     = ref(1);
 const pageSize = ref(10);
@@ -139,28 +140,27 @@ const pageSize = ref(10);
 const showFormModal = ref(false);
 const editingTax    = ref(null);
 const deletingTax   = ref(null);
+const loading       = ref(false);
 
-const taxes = ref([
-  { id: 1, hsnCode: 'GST',    description: 'GST 5% (B)',      cgst: 2.5, sgst: 2.5, igst: 0, cess: 0, additionalCess: 0, vat: 0, taxPercent: 5.00,  lastAccessedBy: 'Administrator', lastAccessedAt: '24-May-2021 10:56 am' },
-  { id: 2, hsnCode: 'GST12',  description: 'GST 12%',         cgst: 6,   sgst: 6,   igst: 0, cess: 0, additionalCess: 0, vat: 0, taxPercent: 12.00, lastAccessedBy: 'Administrator', lastAccessedAt: '01-Jun-2021 09:30 am' },
-  { id: 3, hsnCode: 'GST18',  description: 'GST 18%',         cgst: 9,   sgst: 9,   igst: 0, cess: 0, additionalCess: 0, vat: 0, taxPercent: 18.00, lastAccessedBy: 'Administrator', lastAccessedAt: '15-Jun-2021 11:00 am' },
-  { id: 4, hsnCode: 'GST28',  description: 'GST 28%',         cgst: 14,  sgst: 14,  igst: 0, cess: 0, additionalCess: 0, vat: 0, taxPercent: 28.00, lastAccessedBy: 'Manager',       lastAccessedAt: '20-Jul-2021 02:15 pm' },
-  { id: 5, hsnCode: 'VAT5',   description: 'VAT 5%',          cgst: 0,   sgst: 0,   igst: 0, cess: 0, additionalCess: 0, vat: 5, taxPercent: 5.00,  lastAccessedBy: 'Administrator', lastAccessedAt: '10-Aug-2021 08:45 am' },
-  { id: 6, hsnCode: 'EXEMPT', description: 'Tax Exempt (0%)', cgst: 0,   sgst: 0,   igst: 0, cess: 0, additionalCess: 0, vat: 0, taxPercent: 0.00,  lastAccessedBy: 'Administrator', lastAccessedAt: '05-Sep-2021 04:00 pm' },
-]);
+const taxes = ref([]);
+
+onMounted(async () => {
+  loading.value = true;
+  try { taxes.value = await taxApi.getAll(); } finally { loading.value = false; }
+});
 
 const columns = [
-  { key: 'hsnCode',        label: 'HSN Code' },
-  { key: 'description',    label: 'Description' },
-  { key: 'taxPercent',     label: 'Tax (%)' },
-  { key: 'lastAccessedBy', label: 'Last Accessed By' },
+  { key: 'hsn_code',        label: 'HSN Code' },
+  { key: 'description',     label: 'Description' },
+  { key: 'tax_percent',     label: 'Tax (%)' },
+  { key: 'last_accessed_by', label: 'Last Accessed By' },
 ];
 
 const filtered = computed(() => {
   let data = taxes.value.filter(t =>
     !search.value ||
-    t.hsnCode.toLowerCase().includes(search.value.toLowerCase()) ||
-    t.description.toLowerCase().includes(search.value.toLowerCase())
+    (t.hsn_code || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (t.description || '').toLowerCase().includes(search.value.toLowerCase())
   );
   if (sortKey.value) {
     data = [...data].sort((a, b) => {
@@ -194,19 +194,27 @@ function openEdit(tax)   { editingTax.value = tax;  showFormModal.value = true; 
 function closeFormModal(){ showFormModal.value = false; editingTax.value = null; }
 function openDelete(tax) { deletingTax.value = tax; }
 
-function saveTax(data) {
-  const now = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
-  if (editingTax.value) {
-    const idx = taxes.value.findIndex(t => t.id === editingTax.value.id);
-    if (idx !== -1) taxes.value[idx] = { ...taxes.value[idx], ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now };
-  } else {
-    taxes.value.push({ id: Date.now(), ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now });
+async function saveTax(data) {
+  try {
+    if (editingTax.value) {
+      const updated = await taxApi.update(editingTax.value.id, data);
+      const idx = taxes.value.findIndex(t => t.id === editingTax.value.id);
+      if (idx !== -1) taxes.value[idx] = updated;
+    } else {
+      const created = await taxApi.create(data);
+      taxes.value.push(created);
+    }
+    closeFormModal();
+  } catch (e) {
+    alert(e?.errors ? Object.values(e.errors).flat().join('\n') : 'Save failed');
   }
-  closeFormModal();
 }
 
-function confirmDelete() {
-  taxes.value = taxes.value.filter(t => t.id !== deletingTax.value.id);
-  deletingTax.value = null;
+async function confirmDelete() {
+  try {
+    await taxApi.remove(deletingTax.value.id);
+    taxes.value = taxes.value.filter(t => t.id !== deletingTax.value.id);
+    deletingTax.value = null;
+  } catch { alert('Delete failed'); }
 }
 </script>

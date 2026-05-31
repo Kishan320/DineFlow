@@ -1,21 +1,12 @@
 <template>
-  <!-- Form view -->
-  <ItemFormPage
-    v-if="view !== 'list'"
-    :item="editingItem"
-    @back="closeForm"
-    @save="saveItem"
-  />
-
-  <!-- List view -->
-  <div v-else class="p-4 lg:p-6 xl:p-8 max-w-screen-2xl mx-auto">
+  <div class="p-4 lg:p-6 xl:p-8 max-w-screen-2xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Item List</h1>
         <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Items</p>
       </div>
       <button
-        @click="openCreate"
+        @click="router.push({ name: 'settings-items-create' })"
         class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         style="background:var(--primary);color:var(--primary-foreground)"
       >
@@ -128,7 +119,7 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex items-center gap-1">
-                  <button @click="openEdit(item)" class="p-1.5 rounded-lg hover:bg-info/10 transition-colors" style="color:var(--primary)" title="Edit">
+                  <button @click="router.push({ name: 'settings-items-edit', params: { id: item.id } })" class="p-1.5 rounded-lg hover:bg-info/10 transition-colors" style="color:var(--primary)" title="Edit">
                     <EditIcon :size="13" />
                   </button>
                   <button @click="deletingItem = item" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" style="color:var(--danger)" title="Delete">
@@ -170,18 +161,18 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Search as SearchIcon, X as XIcon, Plus as PlusIcon,
   Edit as EditIcon, Trash2 as Trash2Icon,
   ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   ArrowUpDown, ArrowUp, ArrowDown,
 } from '@lucide/vue';
-import ItemFormPage    from './ItemFormPage.vue';
 import ItemDetailModal from './ItemDetailModal.vue';
 import ItemDeleteModal from './ItemDeleteModal.vue';
+import { items } from './itemsStore.js';
 
-const view         = ref('list'); // 'list' | 'form'
-const editingItem  = ref(null);
+const router       = useRouter();
 const viewingItem  = ref(null);
 const deletingItem = ref(null);
 
@@ -200,26 +191,6 @@ const categoryOptions = [
   'Curries', 'Breads at its best', 'Desserts', 'Cold Beverages', 'Meals',
   'Ayyan Appetizers', 'Banquet', 'Break Fast', 'Chaat Items', 'Chinese',
 ];
-
-const AT = '01-May-2020 05:18 pm';
-
-const items = ref([
-  { id: 1,  code: '001', itemName: 'Masala Dosa',        category: 'Dosa',            restaurantPrice: 80,  barPrice: 80,  roomPrice: 90,  taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 2,  code: '002', itemName: 'Plain Dosa',          category: 'Dosa',            restaurantPrice: 60,  barPrice: 60,  roomPrice: 70,  taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 3,  code: '003', itemName: 'Chicken Biryani',     category: 'Briyani Chicken', restaurantPrice: 180, barPrice: 190, roomPrice: 200, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 4,  code: '004', itemName: 'Mutton Biryani',      category: 'Briyani Mutton',  restaurantPrice: 220, barPrice: 230, roomPrice: 250, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 5,  code: '005', itemName: 'Veg Biryani',         category: 'Briyani Veg',     restaurantPrice: 140, barPrice: 140, roomPrice: 160, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 6,  code: '006', itemName: 'Paneer Butter Masala',category: 'Curries',         restaurantPrice: 160, barPrice: 160, roomPrice: 180, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 7,  code: '007', itemName: 'Butter Naan',         category: 'Breads at its best', restaurantPrice: 40, barPrice: 40, roomPrice: 50, taxType: 'Exclusive', tax: 'GST (5.00%)', state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 8,  code: '008', itemName: 'Cold Coffee',         category: 'Cold Beverages',  restaurantPrice: 80,  barPrice: 90,  roomPrice: 100, taxType: 'Inclusive', tax: 'GST (12.00%)', state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 9,  code: '009', itemName: 'Masala Chai',         category: 'Hot Beverage',    restaurantPrice: 30,  barPrice: 30,  roomPrice: 40,  taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 10, code: '010', itemName: 'Gulab Jamun',         category: 'Desserts',        restaurantPrice: 60,  barPrice: 60,  roomPrice: 70,  taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'Off Sale', itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 11, code: '011', itemName: 'Veg Fried Rice',      category: 'Meals',           restaurantPrice: 120, barPrice: 120, roomPrice: 140, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 12, code: '012', itemName: 'Chicken 65',          category: 'Starters',        restaurantPrice: 200, barPrice: 210, roomPrice: 220, taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 13, code: '013', itemName: 'Idly (2 pcs)',        category: 'Break Fast',      restaurantPrice: 40,  barPrice: 40,  roomPrice: 50,  taxType: 'Exclusive', tax: 'Tax Exempt',   state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 14, code: '014', itemName: 'Vada (2 pcs)',        category: 'Break Fast',      restaurantPrice: 40,  barPrice: 40,  roomPrice: 50,  taxType: 'Exclusive', tax: 'Tax Exempt',   state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-  { id: 15, code: '015', itemName: 'Puri Bhaji',          category: 'Break Fast',      restaurantPrice: 60,  barPrice: 60,  roomPrice: 70,  taxType: 'Exclusive', tax: 'GST (5.00%)',  state: 'On Sale',  itemType: 'Physical Item', note: '', imageUrl: '', lastAccessedBy: 'Administrator', lastAccessedAt: AT, createdAt: AT },
-]);
 
 const columns = [
   { key: 'code',            label: 'Item Code' },
@@ -267,21 +238,6 @@ function toggleSort(key) {
 function sortIcon(key) {
   if (sortKey.value !== key) return ArrowUpDown;
   return sortDir.value === 'asc' ? ArrowUp : ArrowDown;
-}
-
-function openCreate()  { editingItem.value = null; view.value = 'form'; }
-function openEdit(i)   { editingItem.value = i;    view.value = 'form'; }
-function closeForm()   { view.value = 'list'; editingItem.value = null; }
-
-function saveItem(data) {
-  const now = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
-  if (editingItem.value) {
-    const idx = items.value.findIndex(i => i.id === editingItem.value.id);
-    if (idx !== -1) items.value[idx] = { ...items.value[idx], ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now };
-  } else {
-    items.value.push({ id: Date.now(), ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now, createdAt: now });
-  }
-  closeForm();
 }
 
 function confirmDelete() {

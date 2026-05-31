@@ -61,15 +61,15 @@
               style="border-color:var(--border)"
             >
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-medium" style="color:var(--foreground)">{{ cat.categoryName }}</span>
+                <span class="text-xs font-medium" style="color:var(--foreground)">{{ cat.category_name }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-xs" style="color:var(--muted-foreground)">{{ cat.description }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex flex-col">
-                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ cat.lastAccessedBy }}</span>
-                  <span class="text-xs" style="color:var(--muted-foreground)">{{ cat.lastAccessedAt }}</span>
+                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ cat.last_accessed_by }}</span>
+                  <span class="text-xs" style="color:var(--muted-foreground)">{{ cat.updated_at ? new Date(cat.updated_at).toLocaleString('en-IN') : '' }}</span>
                 </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
@@ -125,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Search as SearchIcon, X as XIcon, Plus as PlusIcon,
   Edit as EditIcon, Trash2 as Trash2Icon,
@@ -134,9 +134,10 @@ import {
 } from '@lucide/vue';
 import CategoryFormModal   from './CategoryFormModal.vue';
 import CategoryDeleteModal from './CategoryDeleteModal.vue';
+import { categoryApi } from '@/services/settingsApi';
 
 const search   = ref('');
-const sortKey  = ref('categoryName');
+const sortKey  = ref('category_name');
 const sortDir  = ref('asc');
 const page     = ref(1);
 const pageSize = ref(25);
@@ -144,60 +145,29 @@ const pageSize = ref(25);
 const showFormModal     = ref(false);
 const editingCategory   = ref(null);
 const deletingCategory  = ref(null);
+const loading           = ref(false);
 
-const AT = '01-May-2020 05:18 pm';
+const categories = ref([]);
 
-const categories = ref([
-  { id: 1,  categoryName: 'Ayyan Appetizers',   description: 'Starter appetizers',         lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 2,  categoryName: 'Banquet',             description: 'Banquet special items',       lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 3,  categoryName: 'Breads at its best',  description: 'Variety of breads',           lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 4,  categoryName: 'Break Fast',          description: 'Morning breakfast items',     lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 5,  categoryName: 'Break Fast Combo',    description: 'Breakfast combo meals',       lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 6,  categoryName: 'Briyani Chicken',     description: 'Chicken biryani varieties',   lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 7,  categoryName: 'Briyani Egg',         description: 'Egg biryani varieties',       lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 8,  categoryName: 'Briyani Mutton',      description: 'Mutton biryani varieties',    lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 9,  categoryName: 'Briyani Veg',         description: 'Vegetarian biryani',          lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 10, categoryName: 'Burgers',             description: 'Burger varieties',            lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 11, categoryName: 'Chaat Items',         description: 'Indian street chaat',         lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 12, categoryName: 'Chinese',             description: 'Chinese cuisine items',       lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 13, categoryName: 'Cold Beverages',      description: 'Cold drinks and juices',      lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 14, categoryName: 'Curries',             description: 'Gravy and curry dishes',      lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 15, categoryName: 'Desserts',            description: 'Sweet desserts',              lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 16, categoryName: 'Dosa',                description: 'Dosa varieties',              lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 17, categoryName: 'Drinks',              description: 'Beverages and drinks',        lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 18, categoryName: 'Egg Items',           description: 'Egg based dishes',            lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 19, categoryName: 'Fish Items',          description: 'Fish and seafood',            lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 20, categoryName: 'Fried Rice',          description: 'Fried rice varieties',        lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 21, categoryName: 'Grills',              description: 'Grilled items',               lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 22, categoryName: 'Hot Beverages',       description: 'Tea, coffee and hot drinks',  lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 23, categoryName: 'Ice Creams',          description: 'Ice cream varieties',         lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 24, categoryName: 'Idly',                description: 'Idly varieties',              lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 25, categoryName: 'Juices',              description: 'Fresh fruit juices',          lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 26, categoryName: 'Kebabs',              description: 'Kebab varieties',             lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 27, categoryName: 'Meals',               description: 'Full meal combos',            lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 28, categoryName: 'Noodles',             description: 'Noodle dishes',               lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 29, categoryName: 'Parathas',            description: 'Paratha varieties',           lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 30, categoryName: 'Pasta',               description: 'Pasta dishes',                lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 31, categoryName: 'Pizza',               description: 'Pizza varieties',             lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 32, categoryName: 'Rolls',               description: 'Kathi rolls and wraps',       lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 33, categoryName: 'Salads',              description: 'Fresh salads',                lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 34, categoryName: 'Sandwiches',          description: 'Sandwich varieties',          lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 35, categoryName: 'Soups',               description: 'Soup varieties',              lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 36, categoryName: 'Starters',            description: 'Starter dishes',              lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-  { id: 37, categoryName: 'Tandoor Items',       description: 'Tandoor cooked items',        lastAccessedBy: 'Administrator', lastAccessedAt: AT },
-]);
+onMounted(async () => {
+  loading.value = true;
+  try {
+    const res = await categoryApi.getAll();
+    categories.value = Array.isArray(res) ? res : (res.data ?? []);
+  } finally { loading.value = false; }
+});
 
 const columns = [
-  { key: 'categoryName',   label: 'Category Name' },
-  { key: 'description',    label: 'Description' },
-  { key: 'lastAccessedBy', label: 'Last Accessed By' },
+  { key: 'category_name',   label: 'Category Name' },
+  { key: 'description',     label: 'Description' },
+  { key: 'last_accessed_by', label: 'Last Accessed By' },
 ];
 
 const filtered = computed(() => {
   let data = categories.value.filter(c =>
     !search.value ||
-    c.categoryName.toLowerCase().includes(search.value.toLowerCase()) ||
-    c.description.toLowerCase().includes(search.value.toLowerCase())
+    (c.category_name || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (c.description || '').toLowerCase().includes(search.value.toLowerCase())
   );
   if (sortKey.value) {
     data = [...data].sort((a, b) => {
@@ -230,19 +200,27 @@ function openEdit(cat)       { editingCategory.value = cat; showFormModal.value 
 function closeFormModal()    { showFormModal.value = false; editingCategory.value = null; }
 function openDelete(cat)     { deletingCategory.value = cat; }
 
-function saveCategory(data) {
-  const now = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
-  if (editingCategory.value) {
-    const idx = categories.value.findIndex(c => c.id === editingCategory.value.id);
-    if (idx !== -1) categories.value[idx] = { ...categories.value[idx], ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now };
-  } else {
-    categories.value.push({ id: Date.now(), ...data, lastAccessedBy: 'Administrator', lastAccessedAt: now });
+async function saveCategory(data) {
+  try {
+    if (editingCategory.value) {
+      const updated = await categoryApi.update(editingCategory.value.id, data);
+      const idx = categories.value.findIndex(c => c.id === editingCategory.value.id);
+      if (idx !== -1) categories.value[idx] = updated;
+    } else {
+      const created = await categoryApi.create(data);
+      categories.value.push(created);
+    }
+    closeFormModal();
+  } catch (e) {
+    alert(e?.errors ? Object.values(e.errors).flat().join('\n') : 'Save failed');
   }
-  closeFormModal();
 }
 
-function confirmDelete() {
-  categories.value = categories.value.filter(c => c.id !== deletingCategory.value.id);
-  deletingCategory.value = null;
+async function confirmDelete() {
+  try {
+    await categoryApi.remove(deletingCategory.value.id);
+    categories.value = categories.value.filter(c => c.id !== deletingCategory.value.id);
+    deletingCategory.value = null;
+  } catch { alert('Delete failed'); }
 }
 </script>
