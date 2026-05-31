@@ -608,3 +608,21 @@
 
 @media (min-width: 1280px) { .pos-cart-panel { width: 420px; } }
 @media (min-width: 1536px) { .pos-cart-panel { width: 460px; } }
+
+/* ═══════════════════════════════════════
+   DataTables — strip default chrome
+═══════════════════════════════════════ */
+#categories-table_wrapper .dataTables_length,
+#categories-table_wrapper .dataTables_filter,
+#categories-table_wrapper .dataTables_info,
+#categories-table_wrapper .dataTables_paginate,
+#categories-table_wrapper .dt-layout-row { display: none !important; }
+
+#categories-table_wrapper { padding: 0 !important; }
+#categories-table_wrapper .dt-scroll { border: none !important; }
+
+table#categories-table { width: 100% !important; border-collapse: collapse !important; }
+table#categories-table thead th { border-bottom: none !important; border-top: none !important; }
+table#categories-table tbody td { border-top: none !important; }
+table#categories-table tbody tr:last-child td { border-bottom: none !important; }
+table#categories-table.dataTable.no-footer { border-bottom: none !important; }

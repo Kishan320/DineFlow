@@ -5,13 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $category = Category::orderBy('category_name')->get();
-        return response()->json($category, 200);
+        if ($request->ajax()) {
+            $categories = Category::select(['id', 'category_name', 'description', 'last_accessed_by', 'updated_at']);
+            return DataTables::eloquent($categories)
+                ->addIndexColumn()
+                ->toJson();
+        }
+        return response()->json(Category::orderBy('category_name')->get(), 200);
     }
 
     public function store(Request $request)

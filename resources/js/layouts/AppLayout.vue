@@ -33,6 +33,8 @@
         <RouterView />
       </main>
     </div>
+
+    <Snackbar />
   </div>
 </template>
 
@@ -42,6 +44,7 @@ import { useRoute } from 'vue-router';
 import { useUIStore } from '@/stores/uiStore.js';
 import Sidebar from '@/components/Sidebar.vue';
 import Topbar from '@/components/Topbar.vue';
+import Snackbar from '@/components/ui/Snackbar.vue';
 
 const route = useRoute();
 const uiStore = useUIStore();

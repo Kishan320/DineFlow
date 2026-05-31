@@ -14,8 +14,15 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <!-- DataTables CSS (no Bootstrap theme) -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
     </head>
     <body>
         <div id="app"></div>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <!-- DataTables -->
+        <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
     </body>
 </html>

@@ -1,6 +1,7 @@
 import './bootstrap';
 import '../css/app.css';
 import 'vue-toastification/dist/index.css';
+import 'vue-sonner/style.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
