@@ -13,7 +13,10 @@ return new class extends Migration {
             $table->string('description')->nullable();
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
-        });
+            $table->index('category_name');
+            $table->index('description');
+            $table->index('last_accessed_by');
+        });     
     }
 
     public function down(): void

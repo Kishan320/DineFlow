@@ -33,6 +33,12 @@ return new class extends Migration {
             $table->string('shipping_zip')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->index(['company_name', 'mobile']);
+            $table->index('email');
+            $table->index('contact_person');
+            $table->index('tax_number');
+            $table->index('code');
+            $table->index('billing_city');
         });
     }
 

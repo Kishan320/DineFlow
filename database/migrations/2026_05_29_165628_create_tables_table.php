@@ -14,6 +14,9 @@ return new class extends Migration {
             $table->unsignedInteger('max_seats')->default(1);
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->index('table_name');
+            $table->index('max_seats');
+            $table->index('last_accessed_by');
         });
     }
 

@@ -20,6 +20,12 @@ return new class extends Migration {
             $table->decimal('tax_percent', 8, 2)->default(0);
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->index('hsn_code');
+            $table->index('description');
+            $table->index(['cgst', 'sgst', 'igst']);
+            $table->index('tax_percent');
+            $table->index('last_accessed_by');
+            
         });
     }
 

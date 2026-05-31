@@ -14,6 +14,10 @@ return new class extends Migration {
             $table->string('mobile');
             $table->date('dob')->nullable();
             $table->timestamps();
+            $table->index('waiter_code');
+            $table->index('name');
+            $table->index('mobile');
+            $table->index('dob');
         });
     }
 

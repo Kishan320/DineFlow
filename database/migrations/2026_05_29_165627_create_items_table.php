@@ -23,6 +23,12 @@ return new class extends Migration {
             $table->string('image_url')->nullable();
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->index('item_type');
+            $table->index('category');
+            $table->index('restaurant_price');
+            $table->index('bar_price');
+            $table->index('room_price');
+            $table->index(['created_at', 'id']);
         });
     }
 

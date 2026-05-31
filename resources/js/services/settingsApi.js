@@ -1,7 +1,7 @@
 import api from './axiosInstance';
 
 export const categoryApi = {
-  list:    (params) => api.get('/categories', { params }),
+  list:    (params, signal) => api.get('/categories', { params, signal }),
   create:  (data)   => api.post('/categories', data),
   update:  (id, data) => api.put(`/categories/${id}`, data),
   remove:  (id)     => api.delete(`/categories/${id}`),

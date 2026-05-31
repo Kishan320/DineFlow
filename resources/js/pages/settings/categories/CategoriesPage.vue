@@ -26,7 +26,8 @@
           <option :value="25">25</option>
           <option :value="50">50</option>
         </select>
-        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs" style="background:var(--muted)">
+        <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
+        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs ml-auto" style="background:var(--muted)">
           <SearchIcon :size="13" style="color:var(--muted-foreground)" />
           <input v-model="search" @input="onSearch" type="text" placeholder="Type to Search..."
             class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
@@ -107,21 +108,19 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus as PlusIcon, Search as SearchIcon } from '@lucide/vue';
 import CategoryFormModal from './CategoryFormModal.vue';
 import CategoryDeleteModal from './CategoryDeleteModal.vue';
-import { categoryApi } from '@/services/settingsApi';
+import { useCategoryStore } from '@/stores/categoryStore';
 import { toast } from 'vue-sonner';
+import { storeToRefs } from 'pinia';
 
-// table state
-const rows    = ref([]);
-const total   = ref(0);
+const store = useCategoryStore();
+const { rows, total, pages, loading, saving } = storeToRefs(store);
+
 const page    = ref(1);
-const pages   = ref(1);
 const perPage = ref(25);
 const search  = ref('');
 const sort    = ref('category_name');
 const dir     = ref('asc');
-const loading = ref(false);
 
-// modal state
 const showFormModal    = ref(false);
 const editingCategory  = ref(null);
 const deletingCategory = ref(null);
@@ -134,18 +133,9 @@ const pageNumbers = computed(() => {
   return Array.from({ length: count }, (_, i) => start + i);
 });
 
-async function load() {
-  loading.value = true;
-  try {
-    const res = await categoryApi.list({ page: page.value, per_page: perPage.value, search: search.value, sort: sort.value, dir: dir.value });
-    rows.value  = res.data;
-    total.value = res.total;
-    pages.value = res.pages;
-  } catch {
-    toast.error('Failed to load categories');
-  } finally {
-    loading.value = false;
-  }
+function load() {
+  store.fetchCategories({ page: page.value, per_page: perPage.value, search: search.value, sort: sort.value, dir: dir.value })
+    .catch((e) => { if (e?.name !== 'CanceledError' && e?.code !== 'ERR_CANCELED') toast.error('Failed to load categories'); });
 }
 
 function goToPage(p) {
@@ -156,7 +146,7 @@ function goToPage(p) {
 
 function onSearch() {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => goToPage(1), 400);
+  searchTimer = setTimeout(() => goToPage(1), 250);
 }
 
 function setSort(col) {
@@ -167,7 +157,6 @@ function setSort(col) {
 
 onMounted(load);
 
-// SortIcon inline component
 const SortIcon = {
   props: ['col', 'sort', 'dir'],
   template: `<span style="font-size:10px;margin-left:2px;opacity:0.5">
@@ -184,10 +173,10 @@ function openDelete(cat) { deletingCategory.value = cat; }
 async function saveCategory(data) {
   try {
     if (editingCategory.value) {
-      await categoryApi.update(editingCategory.value.id, data);
+      await store.updateCategory(editingCategory.value.id, data);
       toast.success('Category updated successfully!');
     } else {
-      await categoryApi.create(data);
+      await store.createCategory(data);
       toast.success('Category created successfully!');
     }
     closeFormModal();
@@ -199,7 +188,7 @@ async function saveCategory(data) {
 
 async function confirmDelete() {
   try {
-    await categoryApi.remove(deletingCategory.value.id);
+    await store.deleteCategory(deletingCategory.value.id);
     toast.success('Category deleted successfully!');
     deletingCategory.value = null;
     load();
