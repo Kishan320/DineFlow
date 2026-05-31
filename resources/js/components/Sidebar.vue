@@ -36,10 +36,11 @@
   <!-- Mobile drawer -->
   <aside
     :class="[
-      'fixed top-0 left-0 h-full w-72 bg-card border-r border-border z-50',
+      'fixed top-0 left-0 h-full w-72 border-r border-border z-50',
       'transform transition-transform duration-300 lg:hidden flex flex-col',
       mobileOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
+    style="background:var(--card);border-color:var(--border)"
   >
     <div class="flex items-center justify-between px-4 py-4 border-b border-border">
       <div class="flex items-center gap-3">
