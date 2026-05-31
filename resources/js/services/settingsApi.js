@@ -14,6 +14,7 @@ export const itemApi = {
   create:  (formData) => api.post('/items', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update:  (id, formData) => api.post(`/items/${id}?_method=PUT`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   remove:  (id)       => api.delete(`/items/${id}`),
+  datatable: (params) => api.get('/items/datatable', { params }),
 };
 
 export const customerApi = {

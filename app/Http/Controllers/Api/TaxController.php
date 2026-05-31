@@ -15,38 +15,60 @@ class TaxController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'hsn_code'       => 'required|string|max:50|unique:taxes,hsn_code',
-            'description'    => 'required|string|max:255',
-            'cgst'           => 'required|numeric|min:0',
-            'sgst'           => 'required|numeric|min:0',
-            'igst'           => 'nullable|numeric|min:0',
-            'cess'           => 'nullable|numeric|min:0',
-            'additional_cess'=> 'nullable|numeric|min:0',
-            'vat'            => 'required|numeric|min:0',
-            'tax_percent'    => 'required|numeric|min:0',
+        $request->validate([
+            'hsn_code'        => 'required|string|max:50|unique:taxes,hsn_code',
+            'description'     => 'required|string|max:255',
+            'cgst'            => 'required|numeric|min:0',
+            'sgst'            => 'required|numeric|min:0',
+            'igst'            => 'nullable|numeric|min:0',
+            'cess'            => 'nullable|numeric|min:0',
+            'additional_cess' => 'nullable|numeric|min:0',
+            'vat'             => 'required|numeric|min:0',
+            'tax_percent'     => 'required|numeric|min:0',
         ]);
 
-        $data['last_accessed_by'] = 'Administrator';
-        return response()->json(Tax::create($data), 201);
+        $tax = new Tax();
+        $tax->hsn_code        = $request->hsn_code;
+        $tax->description     = $request->description;
+        $tax->cgst            = $request->cgst;
+        $tax->sgst            = $request->sgst;
+        $tax->igst            = $request->igst;
+        $tax->cess            = $request->cess;
+        $tax->additional_cess = $request->additional_cess;
+        $tax->vat             = $request->vat;
+        $tax->tax_percent     = $request->tax_percent;
+        $tax->last_accessed_by = 'Administrator';
+        $tax->save();
+        $tax->refresh();
+        return response()->json($tax, 201);
     }
 
     public function update(Request $request, Tax $tax)
     {
-        $data = $request->validate([
-            'hsn_code'       => 'required|string|max:50|unique:taxes,hsn_code,' . $tax->id,
-            'description'    => 'required|string|max:255',
-            'cgst'           => 'required|numeric|min:0',
-            'sgst'           => 'required|numeric|min:0',
-            'igst'           => 'nullable|numeric|min:0',
-            'cess'           => 'nullable|numeric|min:0',
-            'additional_cess'=> 'nullable|numeric|min:0',
-            'vat'            => 'required|numeric|min:0',
-            'tax_percent'    => 'required|numeric|min:0',
+        $request->validate([
+            'hsn_code'        => 'required|string|max:50|unique:taxes,hsn_code,' . $tax->id,
+            'description'     => 'required|string|max:255',
+            'cgst'            => 'required|numeric|min:0',
+            'sgst'            => 'required|numeric|min:0',
+            'igst'            => 'nullable|numeric|min:0',
+            'cess'            => 'nullable|numeric|min:0',
+            'additional_cess' => 'nullable|numeric|min:0',
+            'vat'             => 'required|numeric|min:0',
+            'tax_percent'     => 'required|numeric|min:0',
         ]);
 
-        $data['last_accessed_by'] = 'Administrator';
-        $tax->update($data);
+        $tax->hsn_code        = $request->hsn_code;
+        $tax->description     = $request->description;
+        $tax->cgst            = $request->cgst;
+        $tax->sgst            = $request->sgst;
+        $tax->igst            = $request->igst;
+        $tax->cess            = $request->cess;
+        $tax->additional_cess = $request->additional_cess;
+        $tax->vat             = $request->vat;
+        $tax->tax_percent     = $request->tax_percent;
+        $tax->last_accessed_by = 'Administrator';
+        $tax->save();
+        $tax->refresh();
         return response()->json($tax);
     }
 

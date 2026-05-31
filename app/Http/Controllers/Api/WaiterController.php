@@ -15,26 +15,40 @@ class WaiterController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'waiter_code' => 'required|string|max:50|unique:waiters,waiter_code',
             'name'        => 'required|string|max:255',
             'mobile'      => 'required|string|max:20',
             'dob'         => 'nullable|date',
         ]);
 
-        return response()->json(Waiter::create($data), 201);
+        $waiter = new Waiter();
+        $waiter->waiter_code     = $request->waiter_code;
+        $waiter->name            = $request->name;
+        $waiter->mobile          = $request->mobile;
+        $waiter->dob             = $request->dob;
+        $waiter->last_accessed_by = 'Administrator';
+        $waiter->save();
+        $waiter->refresh();
+        return response()->json($waiter, 201);
     }
 
     public function update(Request $request, Waiter $waiter)
     {
-        $data = $request->validate([
+        $request->validate([
             'waiter_code' => 'required|string|max:50|unique:waiters,waiter_code,' . $waiter->id,
             'name'        => 'required|string|max:255',
             'mobile'      => 'required|string|max:20',
             'dob'         => 'nullable|date',
         ]);
 
-        $waiter->update($data);
+        $waiter->waiter_code     = $request->waiter_code;
+        $waiter->name            = $request->name;
+        $waiter->mobile          = $request->mobile;
+        $waiter->dob             = $request->dob;
+        $waiter->last_accessed_by = 'Administrator';
+        $waiter->save();
+        $waiter->refresh();
         return response()->json($waiter);
     }
 

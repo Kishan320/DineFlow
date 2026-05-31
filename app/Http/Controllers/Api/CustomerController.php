@@ -15,7 +15,7 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'code'              => 'required|string|max:50|unique:customers,code',
             'company_name'      => 'required|string|max:255',
             'contact_person'    => 'nullable|string|max:255',
@@ -41,12 +41,39 @@ class CustomerController extends Controller
             'notes'             => 'nullable|string',
         ]);
 
-        return response()->json(Customer::create($data), 201);
+        $customer = new Customer();
+        $customer->code              = $request->code;
+        $customer->company_name      = $request->company_name;
+        $customer->contact_person    = $request->contact_person;
+        $customer->email             = $request->email;
+        $customer->mobile            = $request->mobile;
+        $customer->tax_number        = $request->tax_number;
+        $customer->payment_terms     = $request->payment_terms;
+        $customer->billing_name      = $request->billing_name;
+        $customer->billing_address   = $request->billing_address;
+        $customer->billing_address2  = $request->billing_address2;
+        $customer->billing_city      = $request->billing_city;
+        $customer->billing_state     = $request->billing_state;
+        $customer->billing_country   = $request->billing_country;
+        $customer->billing_zip       = $request->billing_zip;
+        $customer->same_as_billing   = $request->same_as_billing;
+        $customer->shipping_name     = $request->shipping_name;
+        $customer->shipping_address  = $request->shipping_address;
+        $customer->shipping_address2 = $request->shipping_address2;
+        $customer->shipping_city     = $request->shipping_city;
+        $customer->shipping_state    = $request->shipping_state;
+        $customer->shipping_country  = $request->shipping_country;
+        $customer->shipping_zip      = $request->shipping_zip;
+        $customer->notes             = $request->notes;
+        $customer->last_accessed_by  = 'Administrator';
+        $customer->save();
+        $customer->refresh();
+        return response()->json($customer, 201);
     }
 
     public function update(Request $request, Customer $customer)
     {
-        $data = $request->validate([
+        $request->validate([
             'code'              => 'required|string|max:50|unique:customers,code,' . $customer->id,
             'company_name'      => 'required|string|max:255',
             'contact_person'    => 'nullable|string|max:255',
@@ -72,7 +99,32 @@ class CustomerController extends Controller
             'notes'             => 'nullable|string',
         ]);
 
-        $customer->update($data);
+        $customer->code              = $request->code;
+        $customer->company_name      = $request->company_name;
+        $customer->contact_person    = $request->contact_person;
+        $customer->email             = $request->email;
+        $customer->mobile            = $request->mobile;
+        $customer->tax_number        = $request->tax_number;
+        $customer->payment_terms     = $request->payment_terms;
+        $customer->billing_name      = $request->billing_name;
+        $customer->billing_address   = $request->billing_address;
+        $customer->billing_address2  = $request->billing_address2;
+        $customer->billing_city      = $request->billing_city;
+        $customer->billing_state     = $request->billing_state;
+        $customer->billing_country   = $request->billing_country;
+        $customer->billing_zip       = $request->billing_zip;
+        $customer->same_as_billing   = $request->same_as_billing;
+        $customer->shipping_name     = $request->shipping_name;
+        $customer->shipping_address  = $request->shipping_address;
+        $customer->shipping_address2 = $request->shipping_address2;
+        $customer->shipping_city     = $request->shipping_city;
+        $customer->shipping_state    = $request->shipping_state;
+        $customer->shipping_country  = $request->shipping_country;
+        $customer->shipping_zip      = $request->shipping_zip;
+        $customer->notes             = $request->notes;
+        $customer->last_accessed_by  = 'Administrator';
+        $customer->save();
+        $customer->refresh();
         return response()->json($customer);
     }
 
