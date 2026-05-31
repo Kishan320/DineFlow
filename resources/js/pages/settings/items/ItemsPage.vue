@@ -5,11 +5,9 @@
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Item List</h1>
         <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Items</p>
       </div>
-      <button
-        @click="router.push({ name: 'settings-items-create' })"
+      <button @click="router.push({ name: 'settings-items-create' })"
         class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style="background:var(--primary);color:var(--primary-foreground)"
-      >
+        style="background:var(--primary);color:var(--primary-foreground)">
         <PlusIcon :size="15" /> Add Item
       </button>
     </div>
@@ -21,109 +19,70 @@
 
       <!-- Controls -->
       <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
-        <select v-model.number="pageSize" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option v-for="n in [10, 25, 50]" :key="n" :value="n">{{ n }}</option>
+        <select v-model="perPage" @change="goToPage(1)"
+          class="border rounded-lg px-2 py-1.5 text-xs outline-none"
+          style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
         </select>
-
-        <!-- Search -->
         <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs" style="background:var(--muted)">
           <SearchIcon :size="13" style="color:var(--muted-foreground)" />
-          <input v-model="search" @input="page = 1" type="text" placeholder="Type to Search..." class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
-          <button v-if="search" @click="search = ''" style="color:var(--muted-foreground)"><XIcon :size="12" /></button>
+          <input v-model="search" @input="onSearch" type="text" placeholder="Type to Search..."
+            class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
         </div>
-
-        <!-- Category filter -->
-        <select v-model="filterCategory" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option value="">All Categories</option>
-          <option v-for="c in categoryOptions" :key="c" :value="c">{{ c }}</option>
-        </select>
-
-        <!-- State filter -->
-        <select v-model="filterState" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option value="">All States</option>
-          <option value="On Sale">On Sale</option>
-          <option value="Off Sale">Off Sale</option>
-        </select>
-
-        <!-- Type filter -->
-        <select v-model="filterType" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option value="">All Types</option>
-          <option value="Physical Item">Physical Item</option>
-          <option value="Digital Item">Digital Item</option>
-          <option value="Service">Service</option>
-        </select>
       </div>
 
       <!-- Table -->
       <div class="overflow-x-auto scrollbar-thin">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm" style="border-collapse:collapse">
           <thead>
             <tr class="border-b" style="border-color:var(--border);background:color-mix(in srgb, var(--muted) 30%, transparent)">
-              <th
-                v-for="col in columns" :key="col.key"
-                @click="toggleSort(col.key)"
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                style="color:var(--muted-foreground)"
-              >
-                <div class="flex items-center gap-1">
-                  {{ col.label }}
-                  <component :is="sortIcon(col.key)" :size="11" :style="sortKey === col.key ? 'color:var(--primary)' : 'color:var(--muted-foreground);opacity:0.4'" />
-                </div>
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style="color:var(--muted-foreground)">Actions</th>
+              <th class="th">#</th>
+              <th class="th sortable" @click="setSort('code')">Item Code <SortIcon col="code" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('item_name')">Item Name <SortIcon col="item_name" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('category')">Category <SortIcon col="category" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('restaurant_price')">Rest. Price <SortIcon col="restaurant_price" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('bar_price')">Bar Price <SortIcon col="bar_price" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('room_price')">Room Price <SortIcon col="room_price" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('state')">State <SortIcon col="state" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('item_type')">Type <SortIcon col="item_type" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('last_accessed_by')">Last Accessed By <SortIcon col="last_accessed_by" :sort="sort" :dir="dir" /></th>
+              <th class="th sortable" @click="setSort('updated_at')">Updated At <SortIcon col="updated_at" :sort="sort" :dir="dir" /></th>
+              <th class="th">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="paginated.length === 0">
-              <td :colspan="columns.length + 1" class="px-4 py-12 text-center text-sm" style="color:var(--muted-foreground)">No item records found</td>
+            <tr v-if="loading">
+              <td colspan="12" class="td text-center" style="color:var(--muted-foreground)">Loading…</td>
             </tr>
-            <tr
-              v-for="item in paginated" :key="item.id"
-              class="border-b last:border-0 transition-colors hover:bg-muted/40"
-              style="border-color:var(--border)"
-            >
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-semibold" style="color:var(--primary)">{{ item.code }}</span>
+            <tr v-else-if="!rows.length">
+              <td colspan="12" class="td text-center" style="color:var(--muted-foreground)">No entries found</td>
+            </tr>
+            <tr v-for="(row, i) in rows" :key="row.id" class="row">
+              <td class="td">{{ (page - 1) * perPage + i + 1 }}</td>
+              <td class="td">{{ row.code }}</td>
+              <td class="td">{{ row.item_name }}</td>
+              <td class="td">{{ row.category || '—' }}</td>
+              <td class="td">Rs.{{ parseFloat(row.restaurant_price).toFixed(2) }}</td>
+              <td class="td">Rs.{{ parseFloat(row.bar_price).toFixed(2) }}</td>
+              <td class="td">Rs.{{ parseFloat(row.room_price).toFixed(2) }}</td>
+              <td class="td">
+                <span :class="row.state === 'On Sale' ? 'badge-on' : 'badge-off'">{{ row.state }}</span>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <button @click="viewingItem = item" class="text-xs font-medium hover:underline text-left" style="color:var(--foreground)">{{ item.itemName }}</button>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--muted-foreground)">{{ item.category || '—' }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--foreground)">Rs.{{ item.restaurantPrice.toFixed(2) }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--foreground)">Rs.{{ item.barPrice.toFixed(2) }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--foreground)">Rs.{{ item.roomPrice.toFixed(2) }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  :style="item.state === 'On Sale'
-                    ? 'background:color-mix(in srgb,var(--success,#22c55e) 12%,transparent);color:var(--success,#16a34a)'
-                    : 'background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger)'"
-                >{{ item.state }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--muted-foreground)">{{ item.itemType }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <div class="flex flex-col">
-                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ item.lastAccessedBy }}</span>
-                  <span class="text-xs" style="color:var(--muted-foreground)">{{ item.lastAccessedAt }}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
+              <td class="td">{{ row.item_type }}</td>
+              <td class="td">{{ row.last_accessed_by }}</td>
+              <td class="td">{{ row.updated_at ? new Date(row.updated_at).toLocaleString('en-IN') : '' }}</td>
+              <td class="td">
                 <div class="flex items-center gap-1">
-                  <button @click="router.push({ name: 'settings-items-edit', params: { id: item.id } })" class="p-1.5 rounded-lg hover:bg-info/10 transition-colors" style="color:var(--primary)" title="Edit">
-                    <EditIcon :size="13" />
+                  <button @click="viewingItemId = row.id" class="p-1.5 rounded-lg transition-colors" title="View" style="color:var(--muted-foreground)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
-                  <button @click="deletingItem = item" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" style="color:var(--danger)" title="Delete">
-                    <Trash2Icon :size="13" />
+                  <button @click="router.push({ name: 'settings-items-edit', params: { id: row.id } })" class="p-1.5 rounded-lg transition-colors" title="Edit" style="color:var(--primary)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button @click="deletingItem = row" class="p-1.5 rounded-lg transition-colors" title="Delete" style="color:var(--danger)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                   </button>
                 </div>
               </td>
@@ -135,113 +94,166 @@
       <!-- Pagination -->
       <div class="flex items-center justify-between gap-3 px-4 py-3 border-t" style="border-color:var(--border)">
         <span class="text-xs" style="color:var(--muted-foreground)">
-          Showing {{ filtered.length === 0 ? 0 : (page - 1) * pageSize + 1 }} to {{ Math.min(page * pageSize, filtered.length) }} of {{ filtered.length }} entries
+          {{ total === 0 ? 'No entries' : `Showing ${(page - 1) * perPage + 1} to ${Math.min(page * perPage, total)} of ${total} entries` }}
         </span>
         <div class="flex items-center gap-1">
-          <button @click="page = Math.max(1, page - 1)" :disabled="page === 1" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronLeftIcon :size="13" />
-          </button>
-          <button
-            v-for="pn in pageNumbers" :key="pn" @click="page = pn"
-            class="w-7 h-7 rounded-lg text-xs font-medium transition-colors"
-            :style="page === pn ? 'background:var(--primary);color:var(--primary-foreground)' : 'color:var(--muted-foreground)'"
-          >{{ pn }}</button>
-          <button @click="page = Math.min(totalPages, page + 1)" :disabled="page === totalPages || totalPages === 0" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronRightIcon :size="13" />
-          </button>
+          <button class="pg-btn" @click="goToPage(1)" :disabled="page === 1">«</button>
+          <button class="pg-btn" @click="goToPage(page - 1)" :disabled="page === 1">‹</button>
+          <button v-for="p in pageNumbers" :key="p" class="pg-btn" :class="{ active: p === page }" @click="goToPage(p)">{{ p }}</button>
+          <button class="pg-btn" @click="goToPage(page + 1)" :disabled="page === pages">›</button>
+          <button class="pg-btn" @click="goToPage(pages)" :disabled="page === pages">»</button>
         </div>
       </div>
     </div>
 
-    <!-- Modals -->
-    <ItemDetailModal v-if="viewingItem" :item="viewingItem" @close="viewingItem = null" />
+    <ItemDetailModal v-if="viewingItemId" :item-id="viewingItemId" @close="viewingItemId = null" />
     <ItemDeleteModal v-if="deletingItem" :item="deletingItem" @close="deletingItem = null" @confirm="confirmDelete" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import {
-  Search as SearchIcon, X as XIcon, Plus as PlusIcon,
-  Edit as EditIcon, Trash2 as Trash2Icon,
-  ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  ArrowUpDown, ArrowUp, ArrowDown,
-} from '@lucide/vue';
-import ItemDetailModal from './ItemDetailModal.vue';
+import { Plus as PlusIcon, Search as SearchIcon } from '@lucide/vue';
 import ItemDeleteModal from './ItemDeleteModal.vue';
-import { items } from './itemsStore.js';
+import ItemDetailModal from './ItemDetailModal.vue';
+import { itemApi } from '@/services/settingsApi';
+import { toast } from 'vue-sonner';
 
-const router       = useRouter();
-const viewingItem  = ref(null);
-const deletingItem = ref(null);
+const router = useRouter();
 
-const search         = ref('');
-const filterCategory = ref('');
-const filterState    = ref('');
-const filterType     = ref('');
-const sortKey        = ref('itemName');
-const sortDir        = ref('asc');
-const page           = ref(1);
-const pageSize       = ref(25);
+const rows    = ref([]);
+const total   = ref(0);
+const page    = ref(1);
+const pages   = ref(1);
+const perPage = ref(25);
+const search  = ref('');
+const sort    = ref('item_name');
+const dir     = ref('asc');
+const loading = ref(false);
 
-const categoryOptions = [
-  'New Menu June', 'Break Fast Combo', 'Hot Beverage', 'Briyani Chicken',
-  'Briyani Egg', 'Briyani Mutton', 'Briyani Veg', 'Dosa', 'Starters',
-  'Curries', 'Breads at its best', 'Desserts', 'Cold Beverages', 'Meals',
-  'Ayyan Appetizers', 'Banquet', 'Break Fast', 'Chaat Items', 'Chinese',
-];
+const deletingItem  = ref(null);
+const viewingItemId = ref(null);
 
-const columns = [
-  { key: 'code',            label: 'Item Code' },
-  { key: 'itemName',        label: 'Item Name' },
-  { key: 'category',        label: 'Category' },
-  { key: 'restaurantPrice', label: 'Rest. Price' },
-  { key: 'barPrice',        label: 'Bar Price' },
-  { key: 'roomPrice',       label: 'Room Price' },
-  { key: 'state',           label: 'State' },
-  { key: 'itemType',        label: 'Type' },
-  { key: 'lastAccessedBy',  label: 'Last Accessed By' },
-];
+let searchTimer;
 
-const filtered = computed(() => {
-  let data = items.value.filter(i => {
-    const q = search.value.toLowerCase();
-    const matchSearch = !q || i.itemName.toLowerCase().includes(q) || i.code.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
-    const matchCat    = !filterCategory.value || i.category === filterCategory.value;
-    const matchState  = !filterState.value    || i.state    === filterState.value;
-    const matchType   = !filterType.value     || i.itemType === filterType.value;
-    return matchSearch && matchCat && matchState && matchType;
-  });
-  if (sortKey.value) {
-    data = [...data].sort((a, b) => {
-      const av = a[sortKey.value], bv = b[sortKey.value];
-      const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
-      return sortDir.value === 'asc' ? cmp : -cmp;
-    });
-  }
-  return data;
-});
-
-const totalPages  = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
-const paginated   = computed(() => filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
 const pageNumbers = computed(() => {
-  const total = totalPages.value, cur = page.value, count = Math.min(5, total);
-  const start = cur <= 3 ? 1 : cur >= total - 2 ? Math.max(1, total - 4) : cur - 2;
+  const count = Math.min(5, pages.value);
+  const start = page.value < 3 ? 1 : page.value >= pages.value - 1 ? Math.max(1, pages.value - 4) : page.value - 2;
   return Array.from({ length: count }, (_, i) => start + i);
 });
 
-function toggleSort(key) {
-  if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  else { sortKey.value = key; sortDir.value = 'asc'; }
-}
-function sortIcon(key) {
-  if (sortKey.value !== key) return ArrowUpDown;
-  return sortDir.value === 'asc' ? ArrowUp : ArrowDown;
+async function load() {
+  loading.value = true;
+  try {
+    const res = await itemApi.list({ page: page.value, per_page: perPage.value, search: search.value, sort: sort.value, dir: dir.value });
+    rows.value  = res.data;
+    total.value = res.total;
+    pages.value = res.pages;
+  } catch {
+    toast.error('Failed to load items');
+  } finally {
+    loading.value = false;
+  }
 }
 
-function confirmDelete() {
-  items.value = items.value.filter(i => i.id !== deletingItem.value.id);
-  deletingItem.value = null;
+function goToPage(p) {
+  if (p < 1 || p > pages.value) return;
+  page.value = p;
+  load();
+}
+
+function onSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => goToPage(1), 400);
+}
+
+function setSort(col) {
+  if (sort.value === col) dir.value = dir.value === 'asc' ? 'desc' : 'asc';
+  else { sort.value = col; dir.value = 'asc'; }
+  goToPage(1);
+}
+
+onMounted(load);
+
+const SortIcon = {
+  props: ['col', 'sort', 'dir'],
+  template: `<span style="font-size:10px;margin-left:2px;opacity:0.5">
+    <template v-if="col === sort">{{ dir === 'asc' ? '▲' : '▼' }}</template>
+    <template v-else>⇅</template>
+  </span>`,
+};
+
+async function confirmDelete() {
+  try {
+    await itemApi.remove(deletingItem.value.id);
+    toast.success('Item deleted successfully!');
+    deletingItem.value = null;
+    load();
+  } catch {
+    toast.error('Failed to delete item');
+  }
 }
 </script>
+
+<style scoped>
+.th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.th.sortable { cursor: pointer; user-select: none; }
+.td {
+  padding: 10px 16px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+.row { border-bottom: 1px solid var(--border); }
+.row:hover { background: color-mix(in srgb, var(--muted) 40%, transparent); }
+.badge-on {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  color: #16a34a;
+}
+.badge-off {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+}
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-btn.active { background: var(--primary); color: var(--primary-foreground); }
+.pg-btn:not(.active):not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+</style>

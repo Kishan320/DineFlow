@@ -1,20 +1,18 @@
 import api from './axiosInstance';
 
 export const categoryApi = {
-  datatable: (params) => api.get('/categories/datatable', { params }),
-  getAll:  ()       => api.get('/categories'),
+  list:    (params) => api.get('/categories', { params }),
   create:  (data)   => api.post('/categories', data),
   update:  (id, data) => api.put(`/categories/${id}`, data),
   remove:  (id)     => api.delete(`/categories/${id}`),
 };
 
 export const itemApi = {
-  getAll:  ()         => api.get('/items'),
+  list:    (params)   => api.get('/items', { params }),
   getOne:  (id)       => api.get(`/items/${id}`),
   create:  (formData) => api.post('/items', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update:  (id, formData) => api.post(`/items/${id}?_method=PUT`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   remove:  (id)       => api.delete(`/items/${id}`),
-  datatable: (params) => api.get('/items/datatable', { params }),
 };
 
 export const customerApi = {

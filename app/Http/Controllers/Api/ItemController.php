@@ -6,19 +6,36 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Yajra\DataTables\Facades\DataTables;
 
 class ItemController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            $items = Item::select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at']);
-            return DataTables::eloquent($items)
-                ->addIndexColumn()
-                ->toJson();
+        $query = Item::select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('state', 'like', "%{$search}%")
+                  ->orWhere('item_type', 'like', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'like', "%{$search}%");
+            });
         }
-        return response()->json(Item::orderBy('item_name')->get(), 200);
+
+        $sortCol = in_array($request->input('sort'), ['code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'updated_at']) ? $request->input('sort') : 'item_name';
+        $sortDir = $request->input('dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $perPage = in_array((int) $request->input('per_page'), [10, 25, 50]) ? (int) $request->input('per_page') : 25;
+
+        $paginated = $query->orderBy($sortCol, $sortDir)->paginate($perPage);
+
+        return response()->json([
+            'data'  => $paginated->items(),
+            'total' => $paginated->total(),
+            'page'  => $paginated->currentPage(),
+            'pages' => $paginated->lastPage(),
+        ]);
     }
 
     public function store(Request $request)

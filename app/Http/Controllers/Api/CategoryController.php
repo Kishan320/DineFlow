@@ -5,19 +5,33 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            $categories = Category::select(['id', 'category_name', 'description', 'last_accessed_by', 'updated_at']);
-            return DataTables::eloquent($categories)
-                ->addIndexColumn()
-                ->toJson();
+        $query = Category::select(['id', 'category_name', 'description', 'last_accessed_by', 'updated_at']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('category_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'like', "%{$search}%");
+            });
         }
-        return response()->json(Category::orderBy('category_name')->get(), 200);
+
+        $sortCol   = in_array($request->input('sort'), ['category_name', 'description', 'last_accessed_by', 'updated_at']) ? $request->input('sort') : 'category_name';
+        $sortDir   = $request->input('dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $perPage   = in_array((int) $request->input('per_page'), [10, 25, 50]) ? (int) $request->input('per_page') : 25;
+
+        $paginated = $query->orderBy($sortCol, $sortDir)->paginate($perPage);
+
+        return response()->json([
+            'data'  => $paginated->items(),
+            'total' => $paginated->total(),
+            'page'  => $paginated->currentPage(),
+            'pages' => $paginated->lastPage(),
+        ]);
     }
 
     public function store(Request $request)
