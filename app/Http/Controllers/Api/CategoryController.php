@@ -18,6 +18,7 @@ class CategoryController extends Controller
         }
 
         $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
 
         $query = Category::query()
             ->select([
@@ -39,21 +40,18 @@ class CategoryController extends Controller
         // Stable indexed sorting (VERY IMPORTANT)
         $query->orderByDesc('id');
 
-        // Standard pagination (matches frontend store which expects total/pages)
-        $categories = $query
-            ->paginate($perPage)
-            ->withQueryString();
+        $categories = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Categories fetched successfully',
-            'data' => $categories->items(),
-            'total' => $categories->total(),
-            'pages' => $categories->lastPage(),
-            'per_page' => $categories->perPage(),
+            'success'      => true,
+            'message'      => 'Categories fetched successfully',
+            'data'         => $categories->items(),
             'current_page' => $categories->currentPage(),
-            'next_page_url' => $categories->nextPageUrl(),
-            'prev_page_url' => $categories->previousPageUrl(),
+            'per_page'     => $categories->perPage(),
+            'total'        => $categories->total(),
+            'last_page'    => $categories->lastPage(),
+            'from'         => $categories->firstItem(),
+            'to'           => $categories->lastItem(),
         ]);
     }
 

@@ -19,6 +19,8 @@
         "@mdi/font": "^7.4.47",
         "@vitejs/plugin-vue": "^6.0.7",
         "@vueuse/core": "^14.3.0",
+        "ag-grid-community": "^35.3.0",
+        "ag-grid-vue3": "^35.3.0",
         "apexcharts": "^5.13.0",
         "lucide-vue-next": "^1.0.0",
         "pinia": "^3.0.4",
