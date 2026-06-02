@@ -20,6 +20,7 @@
           </label>
           <select
             v-model="form.businessUnit"
+            :disabled="loading"
             class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
             style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
           >
@@ -37,6 +38,7 @@
             <input
               v-model="form.restaurantName"
               type="text"
+              :disabled="loading"
               class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
               style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
             />
@@ -48,6 +50,7 @@
             <input
               v-model="form.gstNo"
               type="text"
+              :disabled="loading"
               class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
               style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
             />
@@ -63,6 +66,7 @@
             <input
               v-model="form.billFooterText"
               type="text"
+              :disabled="loading"
               class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
               style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
             />
@@ -73,6 +77,7 @@
             </label>
             <select
               v-model="form.guestBill"
+              :disabled="loading"
               class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
               style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
             >
@@ -86,14 +91,16 @@
         <div class="flex items-center gap-3 pt-2">
           <button
             @click="handleUpdate"
-            class="px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+            :disabled="loading"
+            class="px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style="background:var(--primary);color:var(--primary-foreground)"
           >
-            Update
+            {{ loading ? 'Saving...' : 'Update' }}
           </button>
           <button
             @click="handleCancel"
-            class="px-5 py-2 rounded-lg text-sm font-medium border transition-colors"
+            :disabled="loading"
+            class="px-5 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style="border-color:var(--border);color:var(--foreground);background:var(--muted)"
           >
             Cancel
@@ -105,27 +112,68 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { restaurantSettingsApi } from '@/services/settingsApi';
+import { toast } from 'vue-sonner';
+
+const loading = ref(false);
+const initialForm = ref(null);
 
 const form = ref({
   businessUnit: 'Dak Trading India Opc Private Limited',
-  restaurantName: 'DAK TRADING INDIA PVT LTD <br> AYYAN MULTI-CUISINE RESTAURANT',
-  gstNo: '33AAGCD1607B1ZF',
-  billFooterText: 'THANK YOU! VISIT AGAIN!!',
+  restaurantName: '',
+  gstNo: '',
+  billFooterText: '',
   guestBill: 'Disabled',
 });
 
-function handleUpdate() {
-  alert('Settings updated successfully!');
+async function loadSettings() {
+  loading.value = true;
+  try {
+    const response = await restaurantSettingsApi.get();
+    if (response.data) {
+      form.value = {
+        businessUnit: response.data.business_unit,
+        restaurantName: response.data.restaurant_name,
+        gstNo: response.data.gst_no,
+        billFooterText: response.data.bill_footer_text,
+        guestBill: response.data.guest_bill,
+      };
+    }
+    initialForm.value = JSON.stringify(form.value);
+  } catch (error) {
+    toast.error('Failed to load restaurant settings');
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleUpdate() {
+  loading.value = true;
+  try {
+    const payload = {
+      business_unit: form.value.businessUnit,
+      restaurant_name: form.value.restaurantName,
+      gst_no: form.value.gstNo,
+      bill_footer_text: form.value.billFooterText,
+      guest_bill: form.value.guestBill,
+    };
+
+    await restaurantSettingsApi.update(payload);
+    toast.success('Restaurant settings updated successfully!');
+    initialForm.value = JSON.stringify(form.value);
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Failed to update restaurant settings');
+  } finally {
+    loading.value = false;
+  }
 }
 
 function handleCancel() {
-  form.value = {
-    businessUnit: 'Dak Trading India Opc Private Limited',
-    restaurantName: 'DAK TRADING INDIA PVT LTD <br> AYYAN MULTI-CUISINE RESTAURANT',
-    gstNo: '33AAGCD1607B1ZF',
-    billFooterText: 'THANK YOU! VISIT AGAIN!!',
-    guestBill: 'Disabled',
-  };
+  if (initialForm.value) {
+    form.value = JSON.parse(initialForm.value);
+  }
 }
+
+onMounted(loadSettings);
 </script>

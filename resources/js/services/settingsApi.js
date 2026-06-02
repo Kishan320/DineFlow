@@ -42,3 +42,9 @@ export const taxApi = {
   update:  (id, data) => api.put(`/taxes/${id}`, data),
   remove:  (id)       => api.delete(`/taxes/${id}`),
 };
+
+export const restaurantSettingsApi = {
+  get:    () => api.get('/restaurant-settings'),
+  save:   (data) => api.post('/restaurant-settings', data),
+  update: (data) => api.put('/restaurant-settings', data),
+};

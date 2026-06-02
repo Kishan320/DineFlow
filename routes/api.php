@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\WaiterController;
 use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\RestaurantSettingsController;
 
 Route::apiResource('categories', CategoryController::class)->except(['show']);
 Route::apiResource('items', ItemController::class);
@@ -14,3 +15,7 @@ Route::apiResource('customers', CustomerController::class)->except(['show']);
 Route::apiResource('tables', TableController::class)->except(['show']);
 Route::apiResource('waiters', WaiterController::class)->except(['show']);
 Route::apiResource('taxes', TaxController::class)->except(['show']);
+
+Route::get('/restaurant-settings', [RestaurantSettingsController::class, 'index']);
+Route::post('/restaurant-settings', [RestaurantSettingsController::class, 'store']);
+Route::put('/restaurant-settings', [RestaurantSettingsController::class, 'update']);
