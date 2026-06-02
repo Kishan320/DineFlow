@@ -19,6 +19,7 @@
         <select v-model="perPage" @change="resetAndLoad" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
           <option :value="10">10</option>
           <option :value="25">25</option>
+          <option :value="50">50</option>
           <option :value="100">100</option>
         </select>
         <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
@@ -122,9 +123,8 @@ import { toast } from 'vue-sonner';
 import { storeToRefs } from 'pinia';
 
 const store = useTaxStore();
-const { rows, total, loading } = storeToRefs(store);
+const { rows, total, perPage, loading } = storeToRefs(store);
 
-const perPage = ref(25);
 const search = ref('');
 const page = ref(1);
 
@@ -183,7 +183,7 @@ const defaultColDef = { resizable: true, suppressMovable: true };
 
 const gridHeight = computed(() => {
   const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
-  return Math.min(Math.max(h, 200), 520) + 'px';
+  return Math.max(h, 280) + 'px';
 });
 
 const pages = computed(() => Math.ceil(total.value / perPage.value) || 1);

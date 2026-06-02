@@ -12,7 +12,7 @@ class ItemController extends Controller
     public function index(Request $request)
     {
         $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 100])) {
+        if (!in_array($perPage, [10, 25, 50, 100])) {
             $perPage = 10;
         }
 

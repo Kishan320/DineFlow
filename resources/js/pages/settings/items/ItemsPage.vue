@@ -19,12 +19,13 @@
 
       <!-- Controls -->
       <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
-        <select v-model="perPage" @change="goToPage(1)"
+        <select v-model="perPage" @change="resetAndLoad"
           class="border rounded-lg px-2 py-1.5 text-xs outline-none"
           style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
           <option :value="10">10</option>
           <option :value="25">25</option>
           <option :value="50">50</option>
+          <option :value="100">100</option>
         </select>
         <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
         <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs ml-auto" style="background:var(--muted)">
@@ -86,13 +87,13 @@
   color: var(--muted-foreground);
 }
 .pg-btn:disabled { opacity: 0.35; cursor: default; }
-.pg-btn:not(:disabled):hover {
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
-  color: var(--primary);
-}
 .pg-btn.active {
   background: var(--primary);
   color: var(--primary-foreground);
+}
+.pg-btn:not(.active):not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
 }
 </style>
 
@@ -134,8 +135,7 @@ const router = useRouter();
 const rows    = ref([]);
 const total   = ref(0);
 const page    = ref(1);
-const pages   = ref(1);
-const perPage = ref(25);
+const perPage = ref(10);
 const search  = ref('');
 const loading = ref(false);
 
@@ -231,11 +231,13 @@ const columnDefs = [
 
 const defaultColDef = { resizable: true, suppressMovable: true };
 
-// Dynamic height: header(38) + rows(40 each) + 2px buffer, min 200, max 520
+// Dynamic height
 const gridHeight = computed(() => {
   const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
-  return Math.min(Math.max(h, 200), 520) + 'px';
+  return Math.max(h, 280) + 'px';
 });
+
+const pages = computed(() => Math.ceil(total.value / perPage.value) || 1);
 
 const pageNumbers = computed(() => {
   const totalPages = pages.value;
@@ -262,12 +264,16 @@ async function load() {
     const res = await itemApi.list({ page: page.value, per_page: perPage.value, search: search.value });
     rows.value  = res.data;
     total.value = res.total;
-    pages.value = res.pages;
   } catch (e) {
     if (e?.name !== 'CanceledError') toast.error('Failed to load items');
   } finally {
     loading.value = false;
   }
+}
+
+function resetAndLoad() {
+  page.value = 1;
+  load();
 }
 
 function goToPage(p) {
@@ -278,7 +284,7 @@ function goToPage(p) {
 
 function onSearch() {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => goToPage(1), 250);
+  searchTimer = setTimeout(resetAndLoad, 250);
 }
 
 onMounted(load);
@@ -288,7 +294,7 @@ async function confirmDelete() {
     await itemApi.remove(deletingItem.value.id);
     toast.success('Item deleted successfully!');
     deletingItem.value = null;
-    load();
+    resetAndLoad();
   } catch {
     toast.error('Failed to delete item');
   }

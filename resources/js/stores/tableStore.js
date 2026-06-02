@@ -5,6 +5,7 @@ import { tableApi } from '@/services/settingsApi';
 export const useTableStore = defineStore('table', () => {
   const rows = ref([]);
   const total = ref(0);
+  const perPage = ref(10);
   const currentPage = ref(1);
   const lastPage = ref(1);
   const from = ref(0);
@@ -21,6 +22,7 @@ export const useTableStore = defineStore('table', () => {
       const res = await tableApi.list(params);
       rows.value = res.data;
       total.value = res.total;
+      perPage.value = res.per_page;
       currentPage.value = res.current_page;
       lastPage.value = res.last_page;
       from.value = res.from || 0;
@@ -54,5 +56,5 @@ export const useTableStore = defineStore('table', () => {
     await tableApi.remove(id);
   }
 
-  return { rows, total, currentPage, lastPage, from, to, loading, saving, fetchTables, createTable, updateTable, deleteTable };
+  return { rows, total, currentPage, lastPage, from, to, perPage, loading, saving, fetchTables, createTable, updateTable, deleteTable };
 });

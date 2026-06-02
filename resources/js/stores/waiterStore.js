@@ -5,6 +5,7 @@ import { waiterApi } from '@/services/settingsApi';
 export const useWaiterStore = defineStore('waiter', () => {
   const rows = ref([]);
   const total = ref(0);
+  const perPage = ref(10);
   const currentPage = ref(1);
   const lastPage = ref(1);
   const from = ref(0);
@@ -21,6 +22,7 @@ export const useWaiterStore = defineStore('waiter', () => {
       const res = await waiterApi.list(params);
       rows.value = res.data;
       total.value = res.total;
+      perPage.value = res.per_page;
       currentPage.value = res.current_page;
       lastPage.value = res.last_page;
       from.value = res.from || 0;
@@ -54,5 +56,5 @@ export const useWaiterStore = defineStore('waiter', () => {
     await waiterApi.remove(id);
   }
 
-  return { rows, total, currentPage, lastPage, from, to, loading, saving, fetchWaiters, createWaiter, updateWaiter, deleteWaiter };
+  return { rows, total, currentPage, lastPage, from, to, perPage, loading, saving, fetchWaiters, createWaiter, updateWaiter, deleteWaiter };
 });

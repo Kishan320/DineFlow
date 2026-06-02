@@ -24,6 +24,7 @@
           style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
           <option :value="10">10</option>
           <option :value="25">25</option>
+          <option :value="50">50</option>
           <option :value="100">100</option>
         </select>
         <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
@@ -131,9 +132,8 @@ import { toast } from 'vue-sonner';
 import { storeToRefs } from 'pinia';
 
 const store = useCategoryStore();
-const { rows, total, loading } = storeToRefs(store);
+const { rows, total, perPage, loading } = storeToRefs(store);
 
-const perPage = ref(25);
 const search = ref('');
 const page = ref(1);
 
@@ -188,10 +188,10 @@ const columnDefs = [
 
 const defaultColDef = { resizable: true, suppressMovable: true };
 
-// Dynamic height: header(38) + rows(40 each) + 2px buffer, min 200, max 520
+// Dynamic height: header(38) + rows(40 each) + 2px buffer, min 280 for better visibility
 const gridHeight = computed(() => {
   const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
-  return Math.min(Math.max(h, 200), 520) + 'px';
+  return Math.max(h, 100) + 'px';
 });
 
 const pages = computed(() => Math.ceil(total.value / perPage.value) || 1);
