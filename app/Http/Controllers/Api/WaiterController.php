@@ -8,9 +8,42 @@ use Illuminate\Http\Request;
 
 class WaiterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Waiter::orderBy('name')->get());
+        $perPage = (int) $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 25, 100])) {
+            $perPage = 10;
+        }
+
+        $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = Waiter::query()
+            ->select(['id', 'waiter_code', 'name', 'mobile', 'dob', 'last_accessed_by', 'updated_at']);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('waiter_code', 'LIKE', "%{$search}%")
+                  ->orWhere('mobile', 'LIKE', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $query->orderByDesc('id');
+        $waiters = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Waiters fetched successfully',
+            'data'         => $waiters->items(),
+            'current_page' => $waiters->currentPage(),
+            'per_page'     => $waiters->perPage(),
+            'total'        => $waiters->total(),
+            'last_page'    => $waiters->lastPage(),
+            'from'         => $waiters->firstItem(),
+            'to'           => $waiters->lastItem(),
+        ]);
     }
 
     public function store(Request $request)

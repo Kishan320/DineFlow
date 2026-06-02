@@ -8,9 +8,41 @@ use Illuminate\Http\Request;
 
 class TaxController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Tax::orderBy('hsn_code')->get());
+        $perPage = (int) $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 25, 100])) {
+            $perPage = 10;
+        }
+
+        $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = Tax::query()
+            ->select(['id', 'hsn_code', 'description', 'cgst', 'sgst', 'igst', 'tax_percent', 'last_accessed_by', 'updated_at']);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('hsn_code', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $query->orderByDesc('id');
+        $taxes = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Taxes fetched successfully',
+            'data'         => $taxes->items(),
+            'current_page' => $taxes->currentPage(),
+            'per_page'     => $taxes->perPage(),
+            'total'        => $taxes->total(),
+            'last_page'    => $taxes->lastPage(),
+            'from'         => $taxes->firstItem(),
+            'to'           => $taxes->lastItem(),
+        ]);
     }
 
     public function store(Request $request)

@@ -24,7 +24,7 @@
         <div class="px-5 py-4">
           <p class="text-sm" style="color:var(--foreground)">
             Are you sure you want to delete
-            <span class="font-semibold">{{ customer?.companyName }}</span>?
+            <span class="font-semibold">{{ customer?.company_name }}</span>?
           </p>
           <p class="text-xs mt-1.5" style="color:var(--muted-foreground)">This action cannot be undone.</p>
         </div>

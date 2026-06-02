@@ -5,230 +5,268 @@
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Customers List</h1>
         <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Customers</p>
       </div>
-      <button
-        @click="openCreate"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style="background:var(--primary);color:var(--primary-foreground)"
-      >
+      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--primary);color:var(--primary-foreground)">
         <PlusIcon :size="15" /> Add Customer
       </button>
     </div>
 
-    <!-- Customers List -->
     <div class="border rounded-xl shadow-card" style="background:var(--card);border-color:var(--border)">
       <div class="px-4 py-3 border-b" style="border-color:var(--border)">
         <h2 class="text-sm font-semibold" style="color:var(--foreground)">Customers List</h2>
       </div>
 
-      <!-- Controls -->
-      <div class="flex items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
-        <select v-model.number="pageSize" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option v-for="n in [10, 25, 50]" :key="n" :value="n">{{ n }}</option>
+      <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
+        <select v-model="perPage" @change="resetAndLoad" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="100">100</option>
         </select>
-        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 max-w-xs" style="background:var(--muted)">
+        <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
+        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs ml-auto" style="background:var(--muted)">
           <SearchIcon :size="13" style="color:var(--muted-foreground)" />
-          <input v-model="search" @input="page = 1" type="text" placeholder="Type to Search..." class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
-          <button v-if="search" @click="search = ''" style="color:var(--muted-foreground)"><XIcon :size="12" /></button>
+          <input v-model="search" @input="onSearch" type="text" placeholder="Type to Search..." class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto scrollbar-thin">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b" style="border-color:var(--border);background:color-mix(in srgb, var(--muted) 30%, transparent)">
-              <th
-                v-for="col in columns" :key="col.key"
-                @click="toggleSort(col.key)"
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                style="color:var(--muted-foreground)"
-              >
-                <div class="flex items-center gap-1">
-                  {{ col.label }}
-                  <component :is="sortIcon(col.key)" :size="11" :style="sortKey === col.key ? 'color:var(--primary)' : 'color:var(--muted-foreground);opacity:0.4'" />
-                </div>
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style="color:var(--muted-foreground)">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="paginated.length === 0">
-              <td :colspan="columns.length + 1" class="px-4 py-12 text-center text-sm" style="color:var(--muted-foreground)">No customer records found</td>
-            </tr>
-            <tr
-              v-for="c in paginated" :key="c.id"
-              class="border-b last:border-0 transition-colors hover:bg-muted/40"
-              style="border-color:var(--border)"
-            >
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ c.code }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-medium" style="color:var(--foreground)">{{ c.company_name }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--foreground)">{{ c.contact_person }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--foreground)">{{ c.email }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs tabular-nums" style="color:var(--foreground)">{{ c.mobile }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--muted-foreground)">{{ c.billing_city }}, {{ c.billing_country }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <div class="flex items-center gap-1">
-                  <button @click="openEdit(c)" class="p-1.5 rounded-lg hover:bg-info/10 transition-colors" style="color:var(--primary)" title="Edit">
-                    <EditIcon :size="13" />
-                  </button>
-                  <button @click="openDelete(c)" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" style="color:var(--danger)" title="Delete">
-                    <Trash2Icon :size="13" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <AgGridVue
+        class="customers-grid"
+        style="width:100%"
+        :style="{ height: gridHeight }"
+        :theme="gridTheme"
+        :rowData="rows"
+        :columnDefs="columnDefs"
+        :defaultColDef="defaultColDef"
+        :loading="loading"
+        :suppressPaginationPanel="true"
+        :suppressMovableColumns="true"
+        :domLayout="'normal'"
+        @grid-ready="onGridReady"
+      />
 
-      <!-- Pagination -->
       <div class="flex items-center justify-between gap-3 px-4 py-3 border-t" style="border-color:var(--border)">
         <span class="text-xs" style="color:var(--muted-foreground)">
-          Showing {{ filtered.length === 0 ? 0 : (page - 1) * pageSize + 1 }} to {{ Math.min(page * pageSize, filtered.length) }} of {{ filtered.length }} entries
+          {{ total === 0 ? 'No entries' : `Showing ${(page - 1) * perPage + 1} to ${Math.min(page * perPage, total)} of ${total} entries` }}
         </span>
         <div class="flex items-center gap-1">
-          <button @click="page = Math.max(1, page - 1)" :disabled="page === 1" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronLeftIcon :size="13" />
-          </button>
-          <button
-            v-for="pn in pageNumbers" :key="pn" @click="page = pn"
-            class="w-7 h-7 rounded-lg text-xs font-medium transition-colors"
-            :style="page === pn ? 'background:var(--primary);color:var(--primary-foreground)' : 'color:var(--muted-foreground)'"
-          >{{ pn }}</button>
-          <button @click="page = Math.min(totalPages, page + 1)" :disabled="page === totalPages || totalPages === 0" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronRightIcon :size="13" />
-          </button>
+          <button class="pg-btn" @click="goToPage(1)" :disabled="page === 1">«</button>
+          <button class="pg-btn" @click="goToPage(page - 1)" :disabled="page === 1">‹</button>
+          <button v-for="p in pageNumbers" :key="p" class="pg-btn" :class="{ active: p === page }" @click="goToPage(p)">{{ p }}</button>
+          <button class="pg-btn" @click="goToPage(page + 1)" :disabled="page === pages">›</button>
+          <button class="pg-btn" @click="goToPage(pages)" :disabled="page === pages">»</button>
         </div>
       </div>
     </div>
 
-    <!-- Modals -->
-    <CustomerFormModal
-      v-if="showFormModal"
-      :customer="editingCustomer"
-      @close="closeFormModal"
-      @save="saveCustomer"
-    />
-    <CustomerDeleteModal
-      v-if="deletingCustomer"
-      :customer="deletingCustomer"
-      @close="deletingCustomer = null"
-      @confirm="confirmDelete"
-    />
+    <CustomerFormModal v-if="showFormModal" :customer="editingCustomer" @close="closeFormModal" @save="saveCustomer" />
+    <CustomerDeleteModal v-if="deletingCustomer" :customer="deletingCustomer" @close="deletingCustomer = null" @confirm="confirmDelete" />
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue';
-import {
-  Search as SearchIcon, X as XIcon, Plus as PlusIcon,
-  Edit as EditIcon, Trash2 as Trash2Icon,
-  ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  ArrowUpDown, ArrowUp, ArrowDown,
-} from '@lucide/vue';
-import CustomerFormModal   from './CustomerFormModal.vue';
-import CustomerDeleteModal from './CustomerDeleteModal.vue';
-import { customerApi } from '@/services/settingsApi';
+<style scoped>
+.customers-grid { display: block; overflow: hidden; }
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+}
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-btn.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+.pg-btn:not(.active):not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+</style>
 
-const search   = ref('');
-const sortKey  = ref('code');
-const sortDir  = ref('asc');
-const page     = ref(1);
-const pageSize = ref(10);
+<script setup>
+import { ref, computed, onMounted, h } from 'vue';
+import { Plus as PlusIcon, Search as SearchIcon } from '@lucide/vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import { ModuleRegistry, AllCommunityModule, themeQuartz } from 'ag-grid-community';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+const gridTheme = themeQuartz.withParams({
+  backgroundColor: 'var(--card)',
+  foregroundColor: 'var(--foreground)',
+  borderColor: 'var(--border)',
+  rowBorder: true,
+  headerBackgroundColor: 'color-mix(in srgb, var(--muted) 30%, transparent)',
+  headerTextColor: 'var(--muted-foreground)',
+  headerFontSize: 11,
+  headerFontWeight: 600,
+  fontSize: 12,
+  rowHeight: 40,
+  headerHeight: 38,
+  cellHorizontalPaddingScale: 1,
+  oddRowBackgroundColor: 'transparent',
+  rowHoverColor: 'color-mix(in srgb, var(--muted) 40%, transparent)',
+  wrapperBorder: false,
+  wrapperBorderRadius: 0,
+});
+
+import CustomerFormModal from './CustomerFormModal.vue';
+import CustomerDeleteModal from './CustomerDeleteModal.vue';
+import { useCustomerStore } from '@/stores/customerStore';
+import { toast } from 'vue-sonner';
+import { storeToRefs } from 'pinia';
+
+const store = useCustomerStore();
+const { rows, total, loading } = storeToRefs(store);
+
+const perPage = ref(25);
+const search = ref('');
+const page = ref(1);
 
 const showFormModal    = ref(false);
 const editingCustomer  = ref(null);
 const deletingCustomer = ref(null);
-const loading          = ref(false);
 
-const customers = ref([]);
+let searchTimer;
 
-onMounted(async () => {
-  loading.value = true;
-  try { customers.value = await customerApi.getAll(); } finally { loading.value = false; }
-});
+const ActionRenderer = {
+  props: ['params'],
+  setup(props) {
+    return () => h('div', { style: 'display:flex;gap:4px;align-items:center' }, [
+      h('button', {
+        title: 'Edit',
+        style: 'color:var(--primary);padding:4px;border:none;background:none;cursor:pointer',
+        onClick: () => openEdit(props.params.data),
+      }, [
+        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+          h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+          h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+        ]),
+      ]),
+      h('button', {
+        title: 'Delete',
+        style: 'color:var(--danger);padding:4px;border:none;background:none;cursor:pointer',
+        onClick: () => openDelete(props.params.data),
+      }, [
+        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+          h('polyline', { points: '3 6 5 6 21 6' }),
+          h('path', { d: 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
+          h('path', { d: 'M10 11v6' }),
+          h('path', { d: 'M14 11v6' }),
+          h('path', { d: 'M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' }),
+        ]),
+      ]),
+    ]);
+  },
+};
 
-const columns = [
-  { key: 'code',           label: 'Code' },
-  { key: 'company_name',   label: 'Company Name' },
-  { key: 'contact_person', label: 'Contact Person' },
-  { key: 'email',          label: 'Email' },
-  { key: 'mobile',         label: 'Mobile' },
-  { key: 'billing_city',   label: 'Location' },
+const columnDefs = [
+  { field: 'code', headerName: 'Code', flex: 0.8, sortable: true },
+  { field: 'company_name', headerName: 'Company Name', flex: 1.2, sortable: true },
+  { field: 'contact_person', headerName: 'Contact Person', flex: 1, sortable: true },
+  { field: 'email', headerName: 'Email', flex: 1.2, sortable: true },
+  { field: 'mobile', headerName: 'Mobile', flex: 0.9, sortable: true },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 0.9, sortable: true },
+  {
+    field: 'updated_at', headerName: 'Updated At', flex: 1, sortable: true,
+    valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
+  },
+  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
-const filtered = computed(() => {
-  let data = customers.value.filter(c =>
-    !search.value ||
-    (c.code || '').toLowerCase().includes(search.value.toLowerCase()) ||
-    (c.company_name || '').toLowerCase().includes(search.value.toLowerCase()) ||
-    (c.contact_person || '').toLowerCase().includes(search.value.toLowerCase()) ||
-    (c.email || '').toLowerCase().includes(search.value.toLowerCase())
-  );
-  if (sortKey.value) {
-    data = [...data].sort((a, b) => {
-      const av = a[sortKey.value], bv = b[sortKey.value];
-      return sortDir.value === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-    });
-  }
-  return data;
+const defaultColDef = { resizable: true, suppressMovable: true };
+
+const gridHeight = computed(() => {
+  const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
+  return Math.min(Math.max(h, 200), 520) + 'px';
 });
 
-const totalPages  = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
-const paginated   = computed(() => filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+const pages = computed(() => Math.ceil(total.value / perPage.value) || 1);
+
 const pageNumbers = computed(() => {
-  const total = totalPages.value, cur = page.value, count = Math.min(5, total);
-  const start = cur <= 3 ? 1 : cur >= total - 2 ? Math.max(1, total - 4) : cur - 2;
-  return Array.from({ length: count }, (_, i) => start + i);
+  const totalPages = pages.value;
+  const current = page.value;
+  const maxVisible = 6;
+  
+  if (totalPages <= maxVisible) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  
+  const start = Math.max(1, current - Math.floor(maxVisible / 2));
+  const end = Math.min(totalPages, start + maxVisible - 1);
+  
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
 
-function toggleSort(key) {
-  if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  else { sortKey.value = key; sortDir.value = 'asc'; }
-}
-function sortIcon(key) {
-  if (sortKey.value !== key) return ArrowUpDown;
-  return sortDir.value === 'asc' ? ArrowUp : ArrowDown;
+function onGridReady(params) {
+  params.api.sizeColumnsToFit();
 }
 
-function openCreate()         { editingCustomer.value = null; showFormModal.value = true; }
-function openEdit(c)          { editingCustomer.value = c; showFormModal.value = true; }
-function closeFormModal()     { showFormModal.value = false; editingCustomer.value = null; }
-function openDelete(c)        { deletingCustomer.value = c; }
+async function load() {
+  try {
+    await store.fetchCustomers({ 
+      per_page: perPage.value, 
+      search: search.value, 
+      page: page.value 
+    });
+  } catch (e) {
+    if (e?.name !== 'CanceledError') toast.error('Failed to load customers');
+  }
+}
+
+function resetAndLoad() {
+  page.value = 1;
+  load();
+}
+
+function goToPage(p) {
+  if (p < 1 || p > pages.value) return;
+  page.value = p;
+  load();
+}
+
+function onSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(resetAndLoad, 250);
+}
+
+onMounted(() => load());
+
+function openCreate() { editingCustomer.value = null; showFormModal.value = true; }
+function openEdit(cust) { editingCustomer.value = cust; showFormModal.value = true; }
+function closeFormModal() { showFormModal.value = false; editingCustomer.value = null; }
+function openDelete(cust) { deletingCustomer.value = cust; }
 
 async function saveCustomer(data) {
   try {
     if (editingCustomer.value) {
-      const updated = await customerApi.update(editingCustomer.value.id, data);
-      const idx = customers.value.findIndex(c => c.id === editingCustomer.value.id);
-      if (idx !== -1) customers.value[idx] = updated;
+      await store.updateCustomer(editingCustomer.value.id, data);
+      toast.success('Customer updated successfully!');
     } else {
-      const created = await customerApi.create(data);
-      customers.value.push(created);
+      await store.createCustomer(data);
+      toast.success('Customer created successfully!');
     }
     closeFormModal();
+    resetAndLoad();
   } catch (e) {
-    alert(e?.errors ? Object.values(e.errors).flat().join('\n') : 'Save failed');
+    toast.error(e?.errors ? Object.values(e.errors).flat().join(' ') : 'Save failed');
   }
 }
 
 async function confirmDelete() {
   try {
-    await customerApi.remove(deletingCustomer.value.id);
-    customers.value = customers.value.filter(c => c.id !== deletingCustomer.value.id);
+    await store.deleteCustomer(deletingCustomer.value.id);
+    toast.success('Customer deleted successfully!');
     deletingCustomer.value = null;
-  } catch { alert('Delete failed'); }
+    resetAndLoad();
+  } catch {
+    toast.error('Failed to delete customer');
+  }
 }
 </script>

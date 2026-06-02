@@ -8,9 +8,41 @@ use Illuminate\Http\Request;
 
 class TableController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(RestaurantTable::orderBy('table_name')->get());
+        $perPage = (int) $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 25, 100])) {
+            $perPage = 10;
+        }
+
+        $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = RestaurantTable::query()
+            ->select(['id', 'table_name', 'description', 'max_seats', 'last_accessed_by', 'updated_at']);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('table_name', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $query->orderByDesc('id');
+        $tables = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Tables fetched successfully',
+            'data'         => $tables->items(),
+            'current_page' => $tables->currentPage(),
+            'per_page'     => $tables->perPage(),
+            'total'        => $tables->total(),
+            'last_page'    => $tables->lastPage(),
+            'from'         => $tables->firstItem(),
+            'to'           => $tables->lastItem(),
+        ]);
     }
 
     public function store(Request $request)

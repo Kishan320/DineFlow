@@ -11,30 +11,41 @@ class ItemController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Item::select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at']);
+        $perPage = (int) $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 25, 100])) {
+            $perPage = 10;
+        }
 
-        if ($search = $request->input('search')) {
+        $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = Item::query()
+            ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at']);
+
+        if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('item_name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
-                  ->orWhere('state', 'like', "%{$search}%")
-                  ->orWhere('item_type', 'like', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'like', "%{$search}%");
+                $q->where('item_name', 'LIKE', "%{$search}%")
+                  ->orWhere('code', 'LIKE', "%{$search}%")
+                  ->orWhere('category', 'LIKE', "%{$search}%")
+                  ->orWhere('state', 'LIKE', "%{$search}%")
+                  ->orWhere('item_type', 'LIKE', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
             });
         }
 
-        $sortCol = in_array($request->input('sort'), ['code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'updated_at']) ? $request->input('sort') : 'item_name';
-        $sortDir = $request->input('dir', 'asc') === 'desc' ? 'desc' : 'asc';
-        $perPage = in_array((int) $request->input('per_page'), [10, 25, 50]) ? (int) $request->input('per_page') : 25;
-
-        $paginated = $query->orderBy($sortCol, $sortDir)->paginate($perPage);
+        $query->orderByDesc('id');
+        $items = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'data'  => $paginated->items(),
-            'total' => $paginated->total(),
-            'page'  => $paginated->currentPage(),
-            'pages' => $paginated->lastPage(),
+            'success'      => true,
+            'message'      => 'Items fetched successfully',
+            'data'         => $items->items(),
+            'current_page' => $items->currentPage(),
+            'per_page'     => $items->perPage(),
+            'total'        => $items->total(),
+            'last_page'    => $items->lastPage(),
+            'from'         => $items->firstItem(),
+            'to'           => $items->lastItem(),
         ]);
     }
 

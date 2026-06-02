@@ -21,26 +21,16 @@
             <XIcon :size="15" />
           </button>
         </div>
-
         <div class="px-5 py-4">
           <p class="text-sm" style="color:var(--foreground)">
-            Are you sure you want to delete table
-            <span class="font-semibold">{{ table?.tableName }}</span>?
+            Are you sure you want to delete
+            <span class="font-semibold">{{ table?.table_name }}</span>?
           </p>
           <p class="text-xs mt-1.5" style="color:var(--muted-foreground)">This action cannot be undone.</p>
         </div>
-
         <div class="flex items-center justify-end gap-3 px-5 py-4 border-t" style="border-color:var(--border)">
-          <button
-            @click="$emit('close')"
-            class="px-4 py-2 rounded-lg text-sm font-medium border transition-colors hover:bg-muted"
-            style="border-color:var(--border);color:var(--foreground)"
-          >Cancel</button>
-          <button
-            @click="$emit('confirm')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            style="background:var(--danger);color:#fff"
-          >Delete</button>
+          <button @click="$emit('close')" class="px-4 py-2 rounded-lg text-sm font-medium border transition-colors hover:bg-muted" style="border-color:var(--border);color:var(--foreground)">Cancel</button>
+          <button @click="$emit('confirm')" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--danger);color:#fff">Delete</button>
         </div>
       </div>
     </div>

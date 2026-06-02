@@ -5,225 +5,265 @@
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Tables List</h1>
         <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Tables</p>
       </div>
-      <button
-        @click="openCreate"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style="background:var(--primary);color:var(--primary-foreground)"
-      >
+      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors" style="background:var(--primary);color:var(--primary-foreground)">
         <PlusIcon :size="15" /> Add Table
       </button>
     </div>
 
-    <!-- Tables List -->
     <div class="border rounded-xl shadow-card" style="background:var(--card);border-color:var(--border)">
       <div class="px-4 py-3 border-b" style="border-color:var(--border)">
-        <h2 class="text-sm font-semibold" style="color:var(--foreground)">Restaurant Tables List</h2>
+        <h2 class="text-sm font-semibold" style="color:var(--foreground)">Tables List</h2>
       </div>
 
-      <!-- Controls -->
-      <div class="flex items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
-        <select v-model.number="pageSize" @change="page = 1" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option v-for="n in [10, 25, 50]" :key="n" :value="n">{{ n }}</option>
+      <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
+        <select v-model="perPage" @change="resetAndLoad" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="100">100</option>
         </select>
-        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 max-w-xs" style="background:var(--muted)">
+        <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
+        <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs ml-auto" style="background:var(--muted)">
           <SearchIcon :size="13" style="color:var(--muted-foreground)" />
-          <input v-model="search" @input="page = 1" type="text" placeholder="Type to Search..." class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
-          <button v-if="search" @click="search = ''" style="color:var(--muted-foreground)"><XIcon :size="12" /></button>
+          <input v-model="search" @input="onSearch" type="text" placeholder="Type to Search..." class="flex-1 bg-transparent text-xs outline-none" style="color:var(--foreground)" />
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto scrollbar-thin">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b" style="border-color:var(--border);background:color-mix(in srgb, var(--muted) 30%, transparent)">
-              <th
-                v-for="col in columns" :key="col.key"
-                @click="toggleSort(col.key)"
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                style="color:var(--muted-foreground)"
-              >
-                <div class="flex items-center gap-1">
-                  {{ col.label }}
-                  <component :is="sortIcon(col.key)" :size="11" :style="sortKey === col.key ? 'color:var(--primary)' : 'color:var(--muted-foreground);opacity:0.4'" />
-                </div>
-              </th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style="color:var(--muted-foreground)">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="paginated.length === 0">
-              <td :colspan="columns.length + 1" class="px-4 py-12 text-center text-sm" style="color:var(--muted-foreground)">No table records found</td>
-            </tr>
-            <tr
-              v-for="(table, idx) in paginated"
-              :key="table.id"
-              class="border-b last:border-0 transition-colors hover:bg-muted/40"
-              style="border-color:var(--border)"
-            >
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs font-semibold" style="color:var(--foreground)">{{ table.table_name }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs" style="color:var(--muted-foreground)">{{ table.description }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-xs tabular-nums font-medium" style="color:var(--foreground)">{{ table.max_seats }}</span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <div class="flex flex-col">
-                  <span class="text-xs font-medium" style="color:var(--foreground)">{{ table.last_accessed_by }}</span>
-                  <span class="text-xs" style="color:var(--muted-foreground)">{{ table.updated_at ? new Date(table.updated_at).toLocaleString('en-IN') : '' }}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <div class="flex items-center gap-1">
-                  <button @click="openEdit(table)" class="p-1.5 rounded-lg hover:bg-info/10 transition-colors" style="color:var(--primary)" title="Edit">
-                    <EditIcon :size="13" />
-                  </button>
-                  <button @click="openDelete(table)" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" style="color:var(--danger)" title="Delete">
-                    <Trash2Icon :size="13" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <AgGridVue
+        class="tables-grid"
+        style="width:100%"
+        :style="{ height: gridHeight }"
+        :theme="gridTheme"
+        :rowData="rows"
+        :columnDefs="columnDefs"
+        :defaultColDef="defaultColDef"
+        :loading="loading"
+        :suppressPaginationPanel="true"
+        :suppressMovableColumns="true"
+        :domLayout="'normal'"
+        @grid-ready="onGridReady"
+      />
 
-      <!-- Pagination -->
       <div class="flex items-center justify-between gap-3 px-4 py-3 border-t" style="border-color:var(--border)">
         <span class="text-xs" style="color:var(--muted-foreground)">
-          Showing {{ filtered.length === 0 ? 0 : (page - 1) * pageSize + 1 }} to {{ Math.min(page * pageSize, filtered.length) }} of {{ filtered.length }} entries
+          {{ total === 0 ? 'No entries' : `Showing ${(page - 1) * perPage + 1} to ${Math.min(page * perPage, total)} of ${total} entries` }}
         </span>
         <div class="flex items-center gap-1">
-          <button @click="page = Math.max(1, page - 1)" :disabled="page === 1" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronLeftIcon :size="13" />
-          </button>
-          <button
-            v-for="pn in pageNumbers" :key="pn" @click="page = pn"
-            class="w-7 h-7 rounded-lg text-xs font-medium transition-colors"
-            :style="page === pn ? 'background:var(--primary);color:var(--primary-foreground)' : 'color:var(--muted-foreground)'"
-          >{{ pn }}</button>
-          <button @click="page = Math.min(totalPages, page + 1)" :disabled="page === totalPages || totalPages === 0" class="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors" style="color:var(--muted-foreground)">
-            <ChevronRightIcon :size="13" />
-          </button>
+          <button class="pg-btn" @click="goToPage(1)" :disabled="page === 1">«</button>
+          <button class="pg-btn" @click="goToPage(page - 1)" :disabled="page === 1">‹</button>
+          <button v-for="p in pageNumbers" :key="p" class="pg-btn" :class="{ active: p === page }" @click="goToPage(p)">{{ p }}</button>
+          <button class="pg-btn" @click="goToPage(page + 1)" :disabled="page === pages">›</button>
+          <button class="pg-btn" @click="goToPage(pages)" :disabled="page === pages">»</button>
         </div>
       </div>
     </div>
 
-    <!-- Modals -->
-    <TableFormModal
-      v-if="showFormModal"
-      :table="editingTable"
-      @close="closeFormModal"
-      @save="saveTable"
-    />
-    <TableDeleteModal
-      v-if="deletingTable"
-      :table="deletingTable"
-      @close="deletingTable = null"
-      @confirm="confirmDelete"
-    />
+    <TableFormModal v-if="showFormModal" :table="editingTable" @close="closeFormModal" @save="saveTable" />
+    <TableDeleteModal v-if="deletingTable" :table="deletingTable" @close="deletingTable = null" @confirm="confirmDelete" />
   </div>
 </template>
 
+<style scoped>
+.tables-grid { display: block; overflow: hidden; }
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+}
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-btn.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.pg-btn:not(.active):not(:disabled):hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+</style>
+
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import {
-  Search as SearchIcon, X as XIcon, Plus as PlusIcon,
-  Edit as EditIcon, Trash2 as Trash2Icon,
-  ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  ArrowUpDown, ArrowUp, ArrowDown,
-} from '@lucide/vue';
-import TableFormModal   from './TableFormModal.vue';
-import TableDeleteModal from './TableDeleteModal.vue';
-import { tableApi } from '@/services/settingsApi';
+import { ref, computed, onMounted, h } from 'vue';
+import { Plus as PlusIcon, Search as SearchIcon } from '@lucide/vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import { ModuleRegistry, AllCommunityModule, themeQuartz } from 'ag-grid-community';
 
-const search   = ref('');
-const sortKey  = ref('table_name');
-const sortDir  = ref('asc');
-const page     = ref(1);
-const pageSize = ref(25);
+ModuleRegistry.registerModules([AllCommunityModule]);
 
-const showFormModal  = ref(false);
-const editingTable   = ref(null);
-const deletingTable  = ref(null);
-const loading        = ref(false);
-
-const tables = ref([]);
-
-onMounted(async () => {
-  loading.value = true;
-  try { tables.value = await tableApi.getAll(); } finally { loading.value = false; }
+const gridTheme = themeQuartz.withParams({
+  backgroundColor: 'var(--card)',
+  foregroundColor: 'var(--foreground)',
+  borderColor: 'var(--border)',
+  rowBorder: true,
+  headerBackgroundColor: 'color-mix(in srgb, var(--muted) 30%, transparent)',
+  headerTextColor: 'var(--muted-foreground)',
+  headerFontSize: 11,
+  headerFontWeight: 600,
+  fontSize: 12,
+  rowHeight: 40,
+  headerHeight: 38,
+  cellHorizontalPaddingScale: 1,
+  oddRowBackgroundColor: 'transparent',
+  rowHoverColor: 'color-mix(in srgb, var(--muted) 40%, transparent)',
+  wrapperBorder: false,
+  wrapperBorderRadius: 0,
 });
 
-const columns = [
-  { key: 'table_name',      label: 'Table Name' },
-  { key: 'description',     label: 'Description' },
-  { key: 'max_seats',       label: 'Max Seats' },
-  { key: 'last_accessed_by', label: 'Last Accessed By' },
+import TableFormModal from './TableFormModal.vue';
+import TableDeleteModal from './TableDeleteModal.vue';
+import { useTableStore } from '@/stores/tableStore';
+import { toast } from 'vue-sonner';
+import { storeToRefs } from 'pinia';
+
+const store = useTableStore();
+const { rows, total, loading } = storeToRefs(store);
+
+const perPage = ref(25);
+const search = ref('');
+const page = ref(1);
+
+const showFormModal    = ref(false);
+const editingTable  = ref(null);
+const deletingTable = ref(null);
+
+let searchTimer;
+
+const ActionRenderer = {
+  props: ['params'],
+  setup(props) {
+    return () => h('div', { style: 'display:flex;gap:4px;align-items:center' }, [
+      h('button', {
+        title: 'Edit',
+        style: 'color:var(--primary);padding:4px;border:none;background:none;cursor:pointer',
+        onClick: () => openEdit(props.params.data),
+      }, [
+        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+          h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+          h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+        ]),
+      ]),
+      h('button', {
+        title: 'Delete',
+        style: 'color:var(--danger);padding:4px;border:none;background:none;cursor:pointer',
+        onClick: () => openDelete(props.params.data),
+      }, [
+        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+          h('polyline', { points: '3 6 5 6 21 6' }),
+          h('path', { d: 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
+          h('path', { d: 'M10 11v6' }),
+          h('path', { d: 'M14 11v6' }),
+          h('path', { d: 'M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' }),
+        ]),
+      ]),
+    ]);
+  },
+};
+
+const columnDefs = [
+  { field: 'table_name', headerName: 'Table Name', flex: 1, sortable: true },
+  { field: 'description', headerName: 'Description', flex: 1.2, sortable: true },
+  { field: 'max_seats', headerName: 'Max Seats', flex: 0.7, sortable: true },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, sortable: true },
+  {
+    field: 'updated_at', headerName: 'Updated At', flex: 1.2, sortable: true,
+    valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
+  },
+  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
-const filtered = computed(() => {
-  let data = tables.value.filter(t =>
-    !search.value ||
-    (t.table_name || '').toLowerCase().includes(search.value.toLowerCase()) ||
-    (t.description || '').toLowerCase().includes(search.value.toLowerCase())
-  );
-  if (sortKey.value) {
-    data = [...data].sort((a, b) => {
-      const av = a[sortKey.value], bv = b[sortKey.value];
-      if (typeof av === 'number') return sortDir.value === 'asc' ? av - bv : bv - av;
-      return sortDir.value === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-    });
-  }
-  return data;
+const defaultColDef = { resizable: true, suppressMovable: true };
+
+const gridHeight = computed(() => {
+  const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
+  return Math.min(Math.max(h, 200), 520) + 'px';
 });
 
-const totalPages  = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
-const paginated   = computed(() => filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+const pages = computed(() => Math.ceil(total.value / perPage.value) || 1);
+
 const pageNumbers = computed(() => {
-  const total = totalPages.value, cur = page.value, count = Math.min(5, total);
-  const start = cur <= 3 ? 1 : cur >= total - 2 ? Math.max(1, total - 4) : cur - 2;
-  return Array.from({ length: count }, (_, i) => start + i);
+  const totalPages = pages.value;
+  const current = page.value;
+  const maxVisible = 6;
+  
+  if (totalPages <= maxVisible) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  
+  const start = Math.max(1, current - Math.floor(maxVisible / 2));
+  const end = Math.min(totalPages, start + maxVisible - 1);
+  
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
 
-function toggleSort(key) {
-  if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-  else { sortKey.value = key; sortDir.value = 'asc'; }
-}
-function sortIcon(key) {
-  if (sortKey.value !== key) return ArrowUpDown;
-  return sortDir.value === 'asc' ? ArrowUp : ArrowDown;
+function onGridReady(params) {
+  params.api.sizeColumnsToFit();
 }
 
-function openCreate()      { editingTable.value = null; showFormModal.value = true; }
-function openEdit(table)   { editingTable.value = table; showFormModal.value = true; }
-function closeFormModal()  { showFormModal.value = false; editingTable.value = null; }
-function openDelete(table) { deletingTable.value = table; }
+async function load() {
+  try {
+    await store.fetchTables({ 
+      per_page: perPage.value, 
+      search: search.value, 
+      page: page.value 
+    });
+  } catch (e) {
+    if (e?.name !== 'CanceledError') toast.error('Failed to load tables');
+  }
+}
+
+function resetAndLoad() {
+  page.value = 1;
+  load();
+}
+
+function goToPage(p) {
+  if (p < 1 || p > pages.value) return;
+  page.value = p;
+  load();
+}
+
+function onSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(resetAndLoad, 250);
+}
+
+onMounted(() => load());
+
+function openCreate() { editingTable.value = null; showFormModal.value = true; }
+function openEdit(t) { editingTable.value = t; showFormModal.value = true; }
+function closeFormModal() { showFormModal.value = false; editingTable.value = null; }
+function openDelete(t) { deletingTable.value = t; }
 
 async function saveTable(data) {
   try {
     if (editingTable.value) {
-      const updated = await tableApi.update(editingTable.value.id, data);
-      const idx = tables.value.findIndex(t => t.id === editingTable.value.id);
-      if (idx !== -1) tables.value[idx] = updated;
+      await store.updateTable(editingTable.value.id, data);
+      toast.success('Table updated successfully!');
     } else {
-      const created = await tableApi.create(data);
-      tables.value.push(created);
+      await store.createTable(data);
+      toast.success('Table created successfully!');
     }
     closeFormModal();
+    resetAndLoad();
   } catch (e) {
-    alert(e?.errors ? Object.values(e.errors).flat().join('\n') : 'Save failed');
+    toast.error(e?.errors ? Object.values(e.errors).flat().join(' ') : 'Save failed');
   }
 }
 
 async function confirmDelete() {
   try {
-    await tableApi.remove(deletingTable.value.id);
-    tables.value = tables.value.filter(t => t.id !== deletingTable.value.id);
+    await store.deleteTable(deletingTable.value.id);
+    toast.success('Table deleted successfully!');
     deletingTable.value = null;
-  } catch { alert('Delete failed'); }
+    resetAndLoad();
+  } catch {
+    toast.error('Failed to delete table');
+  }
 }
 </script>

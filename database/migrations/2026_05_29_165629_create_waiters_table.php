@@ -13,11 +13,13 @@ return new class extends Migration {
             $table->string('name');
             $table->string('mobile');
             $table->date('dob')->nullable();
+            $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
             $table->index('waiter_code');
             $table->index('name');
             $table->index('mobile');
             $table->index('dob');
+            $table->index('last_accessed_by');
         });
     }
 

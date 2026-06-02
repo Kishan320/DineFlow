@@ -626,3 +626,8 @@ table#categories-table thead th { border-bottom: none !important; border-top: no
 table#categories-table tbody td { border-top: none !important; }
 table#categories-table tbody tr:last-child td { border-bottom: none !important; }
 table#categories-table.dataTable.no-footer { border-bottom: none !important; }
+.ag-cell-value.ag-cell.ag-cell-not-inline-editing.ag-cell-normal-height {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}

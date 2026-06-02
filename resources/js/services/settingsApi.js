@@ -16,28 +16,28 @@ export const itemApi = {
 };
 
 export const customerApi = {
-  getAll:  ()         => api.get('/customers'),
+  list:    (params, signal) => api.get('/customers', { params, signal }),
   create:  (data)     => api.post('/customers', data),
   update:  (id, data) => api.put(`/customers/${id}`, data),
   remove:  (id)       => api.delete(`/customers/${id}`),
 };
 
 export const tableApi = {
-  getAll:  ()         => api.get('/tables'),
+  list:    (params, signal) => api.get('/tables', { params, signal }),
   create:  (data)     => api.post('/tables', data),
   update:  (id, data) => api.put(`/tables/${id}`, data),
   remove:  (id)       => api.delete(`/tables/${id}`),
 };
 
 export const waiterApi = {
-  getAll:  ()         => api.get('/waiters'),
+  list:    (params, signal) => api.get('/waiters', { params, signal }),
   create:  (data)     => api.post('/waiters', data),
   update:  (id, data) => api.put(`/waiters/${id}`, data),
   remove:  (id)       => api.delete(`/waiters/${id}`),
 };
 
 export const taxApi = {
-  getAll:  ()         => api.get('/taxes'),
+  list:    (params, signal) => api.get('/taxes', { params, signal }),
   create:  (data)     => api.post('/taxes', data),
   update:  (id, data) => api.put(`/taxes/${id}`, data),
   remove:  (id)       => api.delete(`/taxes/${id}`),

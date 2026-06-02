@@ -8,9 +8,53 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Customer::orderBy('company_name')->get());
+        $perPage = (int) $request->get('per_page', 10);
+        if (!in_array($perPage, [10, 25, 100])) {
+            $perPage = 10;
+        }
+
+        $search = trim($request->get('search', ''));
+        $page = (int) $request->get('page', 1);
+
+        $query = Customer::query()
+            ->select([
+                'id',
+                'code',
+                'company_name',
+                'contact_person',
+                'email',
+                'mobile',
+                'last_accessed_by',
+                'updated_at'
+            ]);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('company_name', 'LIKE', "%{$search}%")
+                  ->orWhere('code', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_person', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('mobile', 'LIKE', "%{$search}%")
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $query->orderByDesc('id');
+        $customers = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Customers fetched successfully',
+            'data'         => $customers->items(),
+            'current_page' => $customers->currentPage(),
+            'per_page'     => $customers->perPage(),
+            'total'        => $customers->total(),
+            'last_page'    => $customers->lastPage(),
+            'from'         => $customers->firstItem(),
+            'to'           => $customers->lastItem(),
+        ]);
     }
 
     public function store(Request $request)

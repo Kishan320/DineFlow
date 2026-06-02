@@ -47,7 +47,6 @@
         :suppressPaginationPanel="true"
         :suppressMovableColumns="true"
         :domLayout="'normal'"
-        rowSelection="single"
         @grid-ready="onGridReady"
       />
 

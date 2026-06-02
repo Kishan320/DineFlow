@@ -32,6 +32,7 @@ return new class extends Migration {
             $table->string('shipping_country')->nullable();
             $table->string('shipping_zip')->nullable();
             $table->text('notes')->nullable();
+            $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
             $table->index(['company_name', 'mobile']);
             $table->index('email');
@@ -39,6 +40,7 @@ return new class extends Migration {
             $table->index('tax_number');
             $table->index('code');
             $table->index('billing_city');
+            $table->index('last_accessed_by');
         });
     }
 
