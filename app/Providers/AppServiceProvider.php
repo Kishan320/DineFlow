@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Point password reset emails to the Vue frontend route
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            return config('app.url') . '/reset-password/' . $token . '?email=' . urlencode($user->email);
+        });
     }
 }

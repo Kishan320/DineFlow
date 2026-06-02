@@ -1,9 +1,38 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
 
 const routes = [
+  // Guest-only routes
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/pages/auth/LoginPage.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/pages/auth/RegisterPage.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/reset-password/:token',
+    name: 'reset-password',
+    component: () => import('@/pages/auth/ResetPasswordPage.vue'),
+    meta: { guest: true },
+  },
+
+  // Protected routes
   {
     path: '/',
     component: () => import('@/layouts/AppLayout.vue'),
+    meta: { requiresAuth: true },
     children: [
       {
         path: '',
@@ -107,6 +136,18 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to) => {
+  const auth = useAuthStore();
+
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { name: 'login' };
+  }
+
+  if (to.meta.guest && auth.isAuthenticated) {
+    return { name: 'dashboard' };
+  }
 });
 
 export default router;

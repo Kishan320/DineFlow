@@ -67,21 +67,21 @@
       <div class="relative">
         <button @click="toggleProfile" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
           <div class="w-7 h-7 rounded-full gradient-primary flex items-center justify-center">
-            <span class="text-white text-xs font-bold">MG</span>
+            <span class="text-white text-xs font-bold">{{ authStore.userInitials }}</span>
           </div>
-          <span class="text-sm font-medium hidden md:block" style="color:var(--foreground)">Marco G.</span>
+          <span class="text-sm font-medium hidden md:block" style="color:var(--foreground)">{{ authStore.userName }}</span>
           <ChevronDownIcon :size="14" class="hidden md:block" style="color:var(--muted-foreground)" />
         </button>
         <div v-if="profileOpen" class="absolute right-0 top-full mt-2 w-48 border rounded-xl shadow-lg z-50 overflow-hidden fade-in" style="background:var(--card);border-color:var(--border)">
           <div class="px-4 py-3 border-b" style="border-color:var(--border)">
-            <p class="text-sm font-semibold" style="color:var(--foreground)">Marco Giordano</p>
-            <p class="text-xs" style="color:var(--muted-foreground)">marco@bistro.com</p>
+            <p class="text-sm font-semibold" style="color:var(--foreground)">{{ authStore.userName }}</p>
+            <p class="text-xs" style="color:var(--muted-foreground)">{{ authStore.userEmail }}</p>
           </div>
           <div class="p-1">
             <button v-for="item in profileMenu" :key="item" class="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-lg transition-colors" style="color:var(--foreground)">
               {{ item }}
             </button>
-            <button class="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-danger/10" style="color:var(--danger)">
+            <button @click="handleLogout" class="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-danger/10" style="color:var(--danger)">
               Sign Out
             </button>
           </div>
@@ -95,24 +95,37 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUIStore } from '@/stores/uiStore.js';
+import { useAuthStore } from '@/stores/authStore.js';
 import {
   Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, Search as SearchIcon,
   Bell as BellIcon, Sun as SunIcon, Moon as MoonIcon, ChevronDown as ChevronDownIcon,
   ShoppingBag as ShoppingBagIcon,
 } from '@lucide/vue';
 import TodaysSaleModal from '@/components/TodaysSaleModal.vue';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 defineProps({ collapsed: Boolean });
 defineEmits(['menu-click', 'collapse-toggle']);
 
-const uiStore = useUIStore();
-const notifOpen = ref(false);
+const router      = useRouter();
+const uiStore     = useUIStore();
+const authStore   = useAuthStore();
+const snackbar    = useSnackbar();
+const notifOpen   = ref(false);
 const profileOpen = ref(false);
 const todaysSaleOpen = ref(false);
 
 function toggleNotif() { notifOpen.value = !notifOpen.value; profileOpen.value = false; }
 function toggleProfile() { profileOpen.value = !profileOpen.value; notifOpen.value = false; }
+
+async function handleLogout() {
+  profileOpen.value = false;
+  await authStore.logout();
+  snackbar.success('Signed out successfully');
+  router.push('/login');
+}
 
 const notifications = [
   { id: 'notif-1', text: 'Table 7 order ready for billing', time: '2 min ago', unread: true },

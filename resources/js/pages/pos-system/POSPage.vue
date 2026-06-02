@@ -2,19 +2,18 @@
   <div class="pos-root">
 
     <!-- New Order / On Going Orders tabs -->
-    <div style="display:flex;gap:8px;padding:10px 16px 0">
+    <div class="pos-order-tabs">
       <button
         v-for="m in [{id:'new',label:'New Order'},{id:'ongoing',label:'On Going Orders'}]"
         :key="m.id"
         @click="posStore.orderMode = m.id"
-        :style="posStore.orderMode === m.id ? 'font-weight:700;border-bottom:2px solid currentColor' : 'color:#6b7280'"
-        style="background:none;border:none;cursor:pointer;padding:6px 12px;font-size:13px;font-family:var(--font-sans)"
+        class="order-tab"
+        :class="{ active: posStore.orderMode === m.id }"
       >
         {{ m.label }}
-        <span
-          v-if="m.id === 'ongoing' && activeOngoingCount > 0"
-          style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#E85D26;color:#fff;font-size:10px;font-weight:700;margin-left:4px"
-        >{{ activeOngoingCount }}</span>
+        <span v-if="m.id === 'ongoing' && activeOngoingCount > 0" class="order-tab-badge">
+          {{ activeOngoingCount }}
+        </span>
       </button>
     </div>
 

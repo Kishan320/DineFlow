@@ -2,13 +2,17 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useUIStore = defineStore('ui', () => {
-  const darkMode = ref(false);
+  const darkMode = ref(localStorage.getItem('dark_mode') === '1');
   const sidebarCollapsed = ref(false);
   const mobileSidebarOpen = ref(false);
+
+  // Apply on store init so dark mode survives refresh
+  document.documentElement.classList.toggle('dark', darkMode.value);
 
   function toggleDark() {
     darkMode.value = !darkMode.value;
     document.documentElement.classList.toggle('dark', darkMode.value);
+    localStorage.setItem('dark_mode', darkMode.value ? '1' : '0');
   }
 
   function toggleSidebar() {

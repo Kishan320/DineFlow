@@ -23,11 +23,11 @@
     <div class="p-2 border-t border-border">
       <div :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg', collapsed ? 'justify-center' : '']">
         <div class="w-7 h-7 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-          <span class="text-white text-xs font-bold">MG</span>
+          <span class="text-white text-xs font-bold">{{ authStore.userInitials }}</span>
         </div>
         <div v-if="!collapsed" class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate" style="color:var(--foreground)">Marco Giordano</p>
-          <p class="text-xs" style="color:var(--muted-foreground)">Manager</p>
+          <p class="text-sm font-semibold truncate" style="color:var(--foreground)">{{ authStore.userName }}</p>
+          <p class="text-xs" style="color:var(--muted-foreground)">Administrator</p>
         </div>
       </div>
     </div>
@@ -59,11 +59,11 @@
     <div class="p-3 border-t border-border">
       <div class="flex items-center gap-3 px-3 py-2">
         <div class="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-          <span class="text-white text-xs font-bold">MG</span>
+          <span class="text-white text-xs font-bold">{{ authStore.userInitials }}</span>
         </div>
         <div>
-          <p class="text-sm font-semibold" style="color:var(--foreground)">Marco Giordano</p>
-          <p class="text-xs" style="color:var(--muted-foreground)">Manager</p>
+          <p class="text-sm font-semibold" style="color:var(--foreground)">{{ authStore.userName }}</p>
+          <p class="text-xs" style="color:var(--muted-foreground)">Administrator</p>
         </div>
       </div>
     </div>
@@ -76,6 +76,7 @@ import { RouterLink } from 'vue-router';
 import AppLogo from '@/components/ui/AppLogo.vue';
 import NavItem from '@/components/NavItem.vue';
 import { X as XIcon } from '@lucide/vue';
+import { useAuthStore } from '@/stores/authStore.js';
 
 defineProps({
   collapsed: Boolean,
@@ -86,6 +87,7 @@ defineProps({
 defineEmits(['mobile-close']);
 
 const expandedGroups = ref(new Set(['nav-workarea']));
+const authStore = useAuthStore();
 
 function toggleGroup(id) {
   if (expandedGroups.value.has(id)) {
