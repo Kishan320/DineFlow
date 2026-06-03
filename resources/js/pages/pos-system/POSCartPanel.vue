@@ -228,14 +228,6 @@
           <span class="t-val">${{ posStore.balance.toFixed(2) }}</span>
         </div>
       </div>
-
-    </div>
-    <!-- ══ END SCROLLABLE ══ -->
-
-    <!-- ══ FIXED BOTTOM ══ -->
-    <div class="cart-bottom">
-
-      <!-- Quick actions -->
       <div class="quick-row">
         <button class="q-action" :disabled="!hasItems" @click="$emit('kot')">
           <FileTextIcon :size="13" /> KOT
@@ -261,6 +253,14 @@
         Pay Now
       </button>
 
+    </div>
+    <!-- ══ END SCROLLABLE ══ -->
+
+    <!-- ══ FIXED BOTTOM ══ -->
+    <div class="cart-bottom">
+
+      <!-- Quick actions -->
+      
     </div>
 
   </div>

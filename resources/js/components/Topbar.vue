@@ -1,5 +1,5 @@
 <template>
-  <header class="h-16 border-b flex items-center px-4 gap-3 flex-shrink-0 z-30 sticky top-0" style="background:var(--card);border-color:var(--border)">
+  <header class="h-10 border-b flex items-center px-4 gap-3 flex-shrink-0 z-30 sticky top-0" style="background:var(--card);border-color:var(--border)">
     <!-- Mobile menu -->
     <button @click="$emit('menu-click')" class="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)">
       <MenuIcon :size="20" />
