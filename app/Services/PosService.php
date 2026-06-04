@@ -42,15 +42,17 @@ class PosService
         return 'KOT-' . str_pad($orderId, 5, '0', STR_PAD_LEFT) . '-' . str_pad($count + 1, 3, '0', STR_PAD_LEFT);
     }
 
-    public function resolveItemTax(Item $item, float $unitPrice, int $qty): array
+    public function resolveItemTax(Item $item, float $unitPrice, int $qty, ?int $userId = null): array
     {
         $taxPercent = 0;
         $taxType = $item->tax_type ?? 'Exclusive';
 
         if ($item->tax) {
-            $tax = Tax::where('description', $item->tax)
-                ->orWhere('hsn_code', $item->tax)
-                ->first();
+            $taxQuery = Tax::where(fn($q) => $q->where('description', $item->tax)->orWhere('hsn_code', $item->tax));
+            if ($userId) {
+                $taxQuery->where('created_by', $userId);
+            }
+            $tax = $taxQuery->first();
             if ($tax) {
                 $taxPercent = (float) $tax->tax_percent;
                 if ($taxPercent == 0) {
@@ -79,7 +81,7 @@ class PosService
         ];
     }
 
-    public function calculateTotals(array $cartItems, float $discount, string $discountType = 'flat'): array
+    public function calculateTotals(array $cartItems, float $discount, string $discountType = 'flat', ?int $userId = null): array
     {
         $subtotal     = 0;
         $taxAmount    = 0;
@@ -91,7 +93,7 @@ class PosService
 
             $unitPrice = (float) $item->restaurant_price;
             $qty       = (int) $ci['quantity'];
-            $taxData   = $this->resolveItemTax($item, $unitPrice, $qty);
+            $taxData   = $this->resolveItemTax($item, $unitPrice, $qty, $userId);
             $lineBase  = $unitPrice * $qty;
 
             $subtotal  += $lineBase;
@@ -124,13 +126,16 @@ class PosService
     public function createOrder(array $data): PosOrder
     {
         return DB::transaction(function () use ($data) {
+            $userId = $data['created_by'] ?? null;
             $totals = $this->calculateTotals(
                 $data['cart_items'],
                 (float)($data['discount'] ?? 0),
-                $data['discount_type'] ?? 'flat'
+                $data['discount_type'] ?? 'flat',
+                $userId
             );
 
             $order = PosOrder::create([
+                'created_by'       => $userId,
                 'order_no'         => $this->generateOrderNo(),
                 'invoice_no'       => $this->generateInvoiceNo(),
                 'session_id'       => $data['session_id'] ?? null,
@@ -176,7 +181,7 @@ class PosService
 
                 $unitPrice = (float) $item->restaurant_price;
                 $qty       = (int) $ci['quantity'];
-                $taxData   = $this->resolveItemTax($item, $unitPrice, $qty);
+                $taxData   = $this->resolveItemTax($item, $unitPrice, $qty, $userId);
                 $lineBase  = $unitPrice * $qty;
 
                 PosOrderItem::create([

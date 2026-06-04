@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
-        'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price',
+        'created_by', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price',
         'tax_type', 'tax', 'state', 'item_type', 'note', 'image_url', 'last_accessed_by',
     ];
 }

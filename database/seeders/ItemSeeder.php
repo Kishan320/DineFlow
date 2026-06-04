@@ -9,8 +9,8 @@ class ItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $total = 10_000;
-        $chunkSize = 500;
+        $total = 1000;
+        $chunkSize = 50;
         $now = now()->toDateTimeString();
 
         $items = [

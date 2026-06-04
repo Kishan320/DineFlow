@@ -9,8 +9,8 @@ class CategoryBulkSeeder extends Seeder
 {
     public function run(): void
     {
-        $total     = 1_000_000;
-        $chunkSize = 5_000;
+        $total     = 1_000;
+        $chunkSize = 5_0;
         $now       = now()->toDateTimeString();
 
         $accessors = ['Administrator', 'Manager', 'Supervisor', 'Staff', 'Owner'];

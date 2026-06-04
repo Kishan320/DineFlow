@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('restaurant_settings', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->string('business_unit');
             $table->text('restaurant_name');
             $table->string('gst_no');
@@ -16,6 +17,8 @@ return new class extends Migration {
             $table->string('guest_bill')->default('Disabled');
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->index('created_by');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

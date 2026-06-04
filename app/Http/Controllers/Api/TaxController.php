@@ -5,32 +5,25 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Tax;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TaxController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = Tax::query()
-            ->select(['id', 'hsn_code', 'description', 'cgst', 'sgst', 'igst', 'tax_percent', 'last_accessed_by', 'updated_at']);
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = Tax::forUser($userId)
+            ->select(['id', 'hsn_code', 'description', 'cgst', 'sgst', 'igst', 'tax_percent', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('hsn_code', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        $query->orderByDesc('id');
-        $taxes = $query->paginate($perPage, ['*'], 'page', $page);
+        $taxes = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -47,14 +40,18 @@ class TaxController extends Controller
 
     public function list()
     {
-        $taxes = Tax::select('id', 'description', 'tax_percent')->orderBy('description')->get();
+        $taxes = Tax::forUser(auth()->id())
+            ->select('id', 'description', 'tax_percent')
+            ->orderBy('description')
+            ->get();
         return response()->json(['success' => true, 'data' => $taxes]);
     }
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'hsn_code'        => 'required|string|max:50|unique:taxes,hsn_code',
+            'hsn_code'        => ['required', 'string', 'max:50', Rule::unique('taxes')->where('created_by', $userId)],
             'description'     => 'required|string|max:255',
             'cgst'            => 'required|numeric|min:0',
             'sgst'            => 'required|numeric|min:0',
@@ -65,26 +62,21 @@ class TaxController extends Controller
             'tax_percent'     => 'required|numeric|min:0',
         ]);
 
-        $tax = new Tax();
-        $tax->hsn_code        = $request->hsn_code;
-        $tax->description     = $request->description;
-        $tax->cgst            = $request->cgst;
-        $tax->sgst            = $request->sgst;
-        $tax->igst            = $request->igst;
-        $tax->cess            = $request->cess;
-        $tax->additional_cess = $request->additional_cess;
-        $tax->vat             = $request->vat;
-        $tax->tax_percent     = $request->tax_percent;
-        $tax->last_accessed_by = 'Administrator';
-        $tax->save();
-        $tax->refresh();
-        return response()->json($tax, 201);
+        $tax = Tax::create(array_merge(
+            $request->only(['hsn_code', 'description', 'cgst', 'sgst', 'igst', 'cess', 'additional_cess', 'vat', 'tax_percent']),
+            ['created_by' => $userId, 'last_accessed_by' => auth()->user()->name]
+        ));
+
+        return response()->json($tax->fresh(), 201);
     }
 
-    public function update(Request $request, Tax $tax)
+    public function update(Request $request, $id)
     {
+        $userId = auth()->id();
+        $tax    = Tax::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'hsn_code'        => 'required|string|max:50|unique:taxes,hsn_code,' . $tax->id,
+            'hsn_code'        => ['required', 'string', 'max:50', Rule::unique('taxes')->where('created_by', $userId)->ignore($tax->id)],
             'description'     => 'required|string|max:255',
             'cgst'            => 'required|numeric|min:0',
             'sgst'            => 'required|numeric|min:0',
@@ -95,23 +87,17 @@ class TaxController extends Controller
             'tax_percent'     => 'required|numeric|min:0',
         ]);
 
-        $tax->hsn_code        = $request->hsn_code;
-        $tax->description     = $request->description;
-        $tax->cgst            = $request->cgst;
-        $tax->sgst            = $request->sgst;
-        $tax->igst            = $request->igst;
-        $tax->cess            = $request->cess;
-        $tax->additional_cess = $request->additional_cess;
-        $tax->vat             = $request->vat;
-        $tax->tax_percent     = $request->tax_percent;
-        $tax->last_accessed_by = 'Administrator';
-        $tax->save();
-        $tax->refresh();
-        return response()->json($tax);
+        $tax->update(array_merge(
+            $request->only(['hsn_code', 'description', 'cgst', 'sgst', 'igst', 'cess', 'additional_cess', 'vat', 'tax_percent']),
+            ['last_accessed_by' => auth()->user()->name]
+        ));
+
+        return response()->json($tax->fresh());
     }
 
-    public function destroy(Tax $tax)
+    public function destroy($id)
     {
+        $tax = Tax::forUser(auth()->id())->findOrFail($id);
         $tax->delete();
         return response()->json(null, 204);
     }

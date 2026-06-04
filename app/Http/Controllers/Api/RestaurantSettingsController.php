@@ -10,82 +10,59 @@ class RestaurantSettingsController extends Controller
 {
     public function index()
     {
-        $settings = RestaurantSettings::first();
-        
-        if (!$settings) {
-            return response()->json([
-                'success' => true,
-                'data' => null,
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $settings,
-        ]);
+        $settings = RestaurantSettings::forUser(auth()->id())->first();
+        return response()->json(['success' => true, 'data' => $settings]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'business_unit' => 'required|string|max:255',
-            'restaurant_name' => 'required|string',
-            'gst_no' => 'required|string|max:255',
+            'business_unit'    => 'required|string|max:255',
+            'restaurant_name'  => 'required|string',
+            'gst_no'           => 'required|string|max:255',
             'bill_footer_text' => 'required|string',
-            'guest_bill' => 'required|string|in:Disabled,Enabled',
+            'guest_bill'       => 'required|string|in:Disabled,Enabled',
         ]);
 
-        $settings = RestaurantSettings::first();
+        $userId   = auth()->id();
+        $settings = RestaurantSettings::forUser($userId)->first()
+            ?? new RestaurantSettings(['created_by' => $userId]);
 
-        if (!$settings) {
-            $settings = new RestaurantSettings();
-        }
+        $settings->fill([
+            'business_unit'    => $request->business_unit,
+            'restaurant_name'  => $request->restaurant_name,
+            'gst_no'           => $request->gst_no,
+            'bill_footer_text' => $request->bill_footer_text,
+            'guest_bill'       => $request->guest_bill,
+            'last_accessed_by' => auth()->user()->name,
+        ])->save();
 
-        $settings->business_unit = $request->business_unit;
-        $settings->restaurant_name = $request->restaurant_name;
-        $settings->gst_no = $request->gst_no;
-        $settings->bill_footer_text = $request->bill_footer_text;
-        $settings->guest_bill = $request->guest_bill;
-        $settings->last_accessed_by = 'Administrator';
-        $settings->save();
-        $settings->refresh();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Restaurant settings saved successfully',
-            'data' => $settings,
-        ], 201);
+        return response()->json(['success' => true, 'message' => 'Restaurant settings saved successfully', 'data' => $settings->fresh()], 201);
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'business_unit' => 'required|string|max:255',
-            'restaurant_name' => 'required|string',
-            'gst_no' => 'required|string|max:255',
+            'business_unit'    => 'required|string|max:255',
+            'restaurant_name'  => 'required|string',
+            'gst_no'           => 'required|string|max:255',
             'bill_footer_text' => 'required|string',
-            'guest_bill' => 'required|string|in:Disabled,Enabled',
+            'guest_bill'       => 'required|string|in:Disabled,Enabled',
         ]);
 
-        $settings = RestaurantSettings::first();
+        $userId   = auth()->id();
+        $settings = RestaurantSettings::forUser($userId)->first()
+            ?? new RestaurantSettings(['created_by' => $userId]);
 
-        if (!$settings) {
-            $settings = new RestaurantSettings();
-        }
+        $settings->fill([
+            'business_unit'    => $request->business_unit,
+            'restaurant_name'  => $request->restaurant_name,
+            'gst_no'           => $request->gst_no,
+            'bill_footer_text' => $request->bill_footer_text,
+            'guest_bill'       => $request->guest_bill,
+            'last_accessed_by' => auth()->user()->name,
+        ])->save();
 
-        $settings->business_unit = $request->business_unit;
-        $settings->restaurant_name = $request->restaurant_name;
-        $settings->gst_no = $request->gst_no;
-        $settings->bill_footer_text = $request->bill_footer_text;
-        $settings->guest_bill = $request->guest_bill;
-        $settings->last_accessed_by = 'Administrator';
-        $settings->save();
-        $settings->refresh();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Restaurant settings updated successfully',
-            'data' => $settings,
-        ], 200);
+        return response()->json(['success' => true, 'message' => 'Restaurant settings updated successfully', 'data' => $settings->fresh()]);
     }
 }

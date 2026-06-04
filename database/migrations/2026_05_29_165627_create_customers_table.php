@@ -9,7 +9,8 @@ return new class extends Migration {
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('code');
             $table->string('company_name');
             $table->string('contact_person')->nullable();
             $table->string('email')->nullable();
@@ -34,13 +35,15 @@ return new class extends Migration {
             $table->text('notes')->nullable();
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->unique(['created_by', 'code']);
+            $table->index('created_by');
             $table->index(['company_name', 'mobile']);
             $table->index('email');
             $table->index('contact_person');
             $table->index('tax_number');
-            $table->index('code');
             $table->index('billing_city');
             $table->index('last_accessed_by');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

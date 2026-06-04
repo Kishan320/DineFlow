@@ -9,7 +9,7 @@ class WaiterSeeder extends Seeder
 {
     public function run(): void
     {
-        $total = 10_000;
+        $total = 1000;
         $chunkSize = 500;
         $now = now()->toDateTimeString();
 

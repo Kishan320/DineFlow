@@ -14,11 +14,12 @@ class PosProductController extends Controller
 
     public function index(Request $request)
     {
+        $userId   = auth()->id();
         $perPage  = in_array((int)$request->per_page, [12, 24, 48, 96]) ? (int)$request->per_page : 24;
         $search   = trim($request->search ?? '');
         $category = trim($request->category ?? '');
 
-        $query = Item::query()
+        $query = Item::forUser($userId)
             ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'tax_type', 'tax', 'state', 'image_url', 'note'])
             ->where('state', 'On Sale')
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
@@ -29,8 +30,7 @@ class PosProductController extends Controller
             ->orderBy('item_name');
 
         $result = $query->paginate($perPage);
-
-        $items = collect($result->items())->map(fn($item) => $this->formatItem($item));
+        $items  = collect($result->items())->map(fn($item) => $this->formatItem($item));
 
         return response()->json([
             'success'      => true,
@@ -44,7 +44,8 @@ class PosProductController extends Controller
 
     public function categories()
     {
-        $categories = Category::orderBy('category_name')
+        $categories = Category::forUser(auth()->id())
+            ->orderBy('category_name')
             ->select(['id', 'category_name'])
             ->get()
             ->map(fn($c) => ['id' => $c->id, 'label' => $c->category_name]);
@@ -58,8 +59,8 @@ class PosProductController extends Controller
         if ($item->tax && is_numeric($item->tax)) {
             $taxPercent = (float) $item->tax;
         } elseif ($item->tax) {
-            $tax = \App\Models\Tax::where('description', $item->tax)
-                ->orWhere('hsn_code', $item->tax)
+            $tax = \App\Models\Tax::forUser(auth()->id())
+                ->where(fn($q) => $q->where('description', $item->tax)->orWhere('hsn_code', $item->tax))
                 ->first();
             if ($tax) {
                 $taxPercent = (float) $tax->tax_percent ?: (float)($tax->cgst + $tax->sgst + $tax->igst + $tax->vat);

@@ -10,36 +10,19 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
-
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = Category::query()
-            ->select([
-                'id',
-                'category_name',
-                'description',
-                'last_accessed_by',
-                'updated_at'
-            ]);
-
-        // Search optimization
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = Category::forUser($userId)
+            ->select(['id', 'category_name', 'description', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('category_name', 'LIKE', "%{$search}%")
-                ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        // Stable indexed sorting (VERY IMPORTANT)
-        $query->orderByDesc('id');
-
-        $categories = $query->paginate($perPage, ['*'], 'page', $page);
+        $categories = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -56,44 +39,59 @@ class CategoryController extends Controller
 
     public function list()
     {
-        $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
+        $categories = Category::forUser(auth()->id())
+            ->select('id', 'category_name')
+            ->orderBy('category_name')
+            ->get();
         return response()->json(['success' => true, 'data' => $categories]);
     }
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'category_name' => 'required|string|max:255|unique:categories,category_name',
+            'category_name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('categories')->where('created_by', $userId),
+            ],
             'description' => 'nullable|string|max:500',
         ]);
-        $category = new Category();
-        $category->category_name = $request->category_name;
-        $category->description = $request->description;
-        $category->last_accessed_by = 'Administrator';
-        $category->save();
-        $category->refresh();
-        return response()->json($category, 201);
+
+        $category = Category::create([
+            'created_by'    => $userId,
+            'category_name' => $request->category_name,
+            'description'   => $request->description,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($category->fresh(), 201);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
+        $userId   = auth()->id();
+        $category = Category::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'category_name' => 'required|string|max:255|unique:categories,category_name,' . $category->id,
+            'category_name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('categories')->where('created_by', $userId)->ignore($category->id),
+            ],
             'description' => 'nullable|string|max:500',
         ]);
-        $category->category_name = $request->category_name;
-        $category->description = $request->description;
-        $category->last_accessed_by = 'Administrator';
-        $category->save();
-        $category->refresh();
-        return response()->json($category, 200);
+
+        $category->update([
+            'category_name'    => $request->category_name,
+            'description'      => $request->description,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($category->fresh());
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
+        $category = Category::forUser(auth()->id())->findOrFail($id);
         $category->delete();
         return response()->json(null, 204);
     }

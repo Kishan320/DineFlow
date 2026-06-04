@@ -9,8 +9,8 @@ class CustomerSeeder extends Seeder
 {
     public function run(): void
     {
-        $total = 10_000;
-        $chunkSize = 500;
+        $total = 1000;
+        $chunkSize = 50;
         $now = now()->toDateTimeString();
 
         $companies = ['ABC Corp', 'XYZ Inc', 'Tech Solutions', 'Global Trade', 'Prime Business', 'Elite Enterprises', 'Smart Ventures', 'Dynamic Group'];

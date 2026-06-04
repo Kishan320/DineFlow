@@ -9,7 +9,8 @@ return new class extends Migration {
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('code');
             $table->string('item_name');
             $table->string('category')->nullable();
             $table->decimal('restaurant_price', 10, 2)->default(0);
@@ -23,12 +24,15 @@ return new class extends Migration {
             $table->string('image_url')->nullable();
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
+            $table->unique(['created_by', 'code']);
+            $table->index('created_by');
             $table->index('item_type');
             $table->index('category');
             $table->index('restaurant_price');
             $table->index('bar_price');
             $table->index('room_price');
             $table->index(['created_at', 'id']);
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

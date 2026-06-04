@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('pos_orders', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->string('order_no')->unique();
             $table->string('invoice_no')->unique()->nullable();
             $table->unsignedBigInteger('session_id')->nullable();
@@ -56,6 +57,8 @@ return new class extends Migration {
             $table->index('payment_status');
             $table->index('order_type');
             $table->index('created_at');
+            $table->index('created_by');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

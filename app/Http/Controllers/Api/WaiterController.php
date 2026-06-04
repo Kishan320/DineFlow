@@ -5,33 +5,26 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Waiter;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class WaiterController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = Waiter::query()
-            ->select(['id', 'waiter_code', 'name', 'mobile', 'dob', 'last_accessed_by', 'updated_at']);
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = Waiter::forUser($userId)
+            ->select(['id', 'waiter_code', 'name', 'mobile', 'dob', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('waiter_code', 'LIKE', "%{$search}%")
-                  ->orWhere('mobile', 'LIKE', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('mobile', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        $query->orderByDesc('id');
-        $waiters = $query->paginate($perPage, ['*'], 'page', $page);
+        $waiters = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -48,45 +41,52 @@ class WaiterController extends Controller
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'waiter_code' => 'required|string|max:50|unique:waiters,waiter_code',
+            'waiter_code' => ['required', 'string', 'max:50', Rule::unique('waiters')->where('created_by', $userId)],
             'name'        => 'required|string|max:255',
             'mobile'      => 'required|string|max:20',
             'dob'         => 'nullable|date',
         ]);
 
-        $waiter = new Waiter();
-        $waiter->waiter_code     = $request->waiter_code;
-        $waiter->name            = $request->name;
-        $waiter->mobile          = $request->mobile;
-        $waiter->dob             = $request->dob;
-        $waiter->last_accessed_by = 'Administrator';
-        $waiter->save();
-        $waiter->refresh();
-        return response()->json($waiter, 201);
+        $waiter = Waiter::create([
+            'created_by'       => $userId,
+            'waiter_code'      => $request->waiter_code,
+            'name'             => $request->name,
+            'mobile'           => $request->mobile,
+            'dob'              => $request->dob,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($waiter->fresh(), 201);
     }
 
-    public function update(Request $request, Waiter $waiter)
+    public function update(Request $request, $id)
     {
+        $userId = auth()->id();
+        $waiter = Waiter::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'waiter_code' => 'required|string|max:50|unique:waiters,waiter_code,' . $waiter->id,
+            'waiter_code' => ['required', 'string', 'max:50', Rule::unique('waiters')->where('created_by', $userId)->ignore($waiter->id)],
             'name'        => 'required|string|max:255',
             'mobile'      => 'required|string|max:20',
             'dob'         => 'nullable|date',
         ]);
 
-        $waiter->waiter_code     = $request->waiter_code;
-        $waiter->name            = $request->name;
-        $waiter->mobile          = $request->mobile;
-        $waiter->dob             = $request->dob;
-        $waiter->last_accessed_by = 'Administrator';
-        $waiter->save();
-        $waiter->refresh();
-        return response()->json($waiter);
+        $waiter->update([
+            'waiter_code'      => $request->waiter_code,
+            'name'             => $request->name,
+            'mobile'           => $request->mobile,
+            'dob'              => $request->dob,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($waiter->fresh());
     }
 
-    public function destroy(Waiter $waiter)
+    public function destroy($id)
     {
+        $waiter = Waiter::forUser(auth()->id())->findOrFail($id);
         $waiter->delete();
         return response()->json(null, 204);
     }

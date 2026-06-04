@@ -12,7 +12,7 @@ class PosKotController extends Controller
 {
     public function __construct(private PosService $posService) {}
 
-    public function store(Request $request, PosOrder $posOrder)
+    public function store(Request $request, $orderId)
     {
         $request->validate([
             'kot_items'             => 'required|array|min:1',
@@ -22,26 +22,25 @@ class PosKotController extends Controller
             'notes'                 => 'nullable|string',
         ]);
 
-        $kot = $this->posService->generateKot(
-            $posOrder,
-            $request->kot_items,
-            $request->notes
-        );
+        $posOrder = PosOrder::forUser(auth()->id())->findOrFail($orderId);
 
+        $kot = $this->posService->generateKot($posOrder, $request->kot_items, $request->notes);
         return response()->json(['success' => true, 'data' => $kot], 201);
     }
 
-    public function index(PosOrder $posOrder)
+    public function index($orderId)
     {
-        $kots = $posOrder->kots()->with('items')->orderBy('id')->get();
+        $posOrder = PosOrder::forUser(auth()->id())->findOrFail($orderId);
+        $kots     = $posOrder->kots()->with('items')->orderBy('id')->get();
         return response()->json(['success' => true, 'data' => $kots]);
     }
 
     public function updateStatus(Request $request, PosKot $posKot)
     {
-        $request->validate([
-            'status' => 'required|in:Pending,Preparing,Ready,Served',
-        ]);
+        $request->validate(['status' => 'required|in:Pending,Preparing,Ready,Served']);
+
+        PosOrder::forUser(auth()->id())->findOrFail($posKot->pos_order_id);
+
         $posKot->update(['status' => $request->status]);
         return response()->json(['success' => true, 'data' => $posKot->fresh('items')]);
     }
@@ -49,6 +48,7 @@ class PosKotController extends Controller
     public function pending()
     {
         $kots = PosKot::with(['items', 'order'])
+            ->whereHas('order', fn($q) => $q->where('created_by', auth()->id()))
             ->whereIn('status', ['Pending', 'Preparing'])
             ->orderBy('created_at')
             ->get();

@@ -5,44 +5,28 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = Customer::query()
-            ->select([
-                'id',
-                'code',
-                'company_name',
-                'contact_person',
-                'email',
-                'mobile',
-                'last_accessed_by',
-                'updated_at'
-            ]);
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = Customer::forUser($userId)
+            ->select(['id', 'code', 'company_name', 'contact_person', 'email', 'mobile', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('company_name', 'LIKE', "%{$search}%")
                   ->orWhere('code', 'LIKE', "%{$search}%")
                   ->orWhere('contact_person', 'LIKE', "%{$search}%")
                   ->orWhere('email', 'LIKE', "%{$search}%")
-                  ->orWhere('mobile', 'LIKE', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('mobile', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        $query->orderByDesc('id');
-        $customers = $query->paginate($perPage, ['*'], 'page', $page);
+        $customers = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -59,8 +43,9 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'code'              => 'required|string|max:50|unique:customers,code',
+            'code'              => ['required', 'string', 'max:50', Rule::unique('customers')->where('created_by', $userId)],
             'company_name'      => 'required|string|max:255',
             'contact_person'    => 'nullable|string|max:255',
             'email'             => 'nullable|email|max:255',
@@ -85,40 +70,27 @@ class CustomerController extends Controller
             'notes'             => 'nullable|string',
         ]);
 
-        $customer = new Customer();
-        $customer->code              = $request->code;
-        $customer->company_name      = $request->company_name;
-        $customer->contact_person    = $request->contact_person;
-        $customer->email             = $request->email;
-        $customer->mobile            = $request->mobile;
-        $customer->tax_number        = $request->tax_number;
-        $customer->payment_terms     = $request->payment_terms;
-        $customer->billing_name      = $request->billing_name;
-        $customer->billing_address   = $request->billing_address;
-        $customer->billing_address2  = $request->billing_address2;
-        $customer->billing_city      = $request->billing_city;
-        $customer->billing_state     = $request->billing_state;
-        $customer->billing_country   = $request->billing_country;
-        $customer->billing_zip       = $request->billing_zip;
-        $customer->same_as_billing   = $request->same_as_billing;
-        $customer->shipping_name     = $request->shipping_name;
-        $customer->shipping_address  = $request->shipping_address;
-        $customer->shipping_address2 = $request->shipping_address2;
-        $customer->shipping_city     = $request->shipping_city;
-        $customer->shipping_state    = $request->shipping_state;
-        $customer->shipping_country  = $request->shipping_country;
-        $customer->shipping_zip      = $request->shipping_zip;
-        $customer->notes             = $request->notes;
-        $customer->last_accessed_by  = 'Administrator';
-        $customer->save();
-        $customer->refresh();
-        return response()->json($customer, 201);
+        $customer = Customer::create(array_merge(
+            $request->only([
+                'code', 'company_name', 'contact_person', 'email', 'mobile', 'tax_number',
+                'payment_terms', 'billing_name', 'billing_address', 'billing_address2',
+                'billing_city', 'billing_state', 'billing_country', 'billing_zip',
+                'same_as_billing', 'shipping_name', 'shipping_address', 'shipping_address2',
+                'shipping_city', 'shipping_state', 'shipping_country', 'shipping_zip', 'notes',
+            ]),
+            ['created_by' => $userId, 'last_accessed_by' => auth()->user()->name]
+        ));
+
+        return response()->json($customer->fresh(), 201);
     }
 
-    public function update(Request $request, Customer $customer)
+    public function update(Request $request, $id)
     {
+        $userId   = auth()->id();
+        $customer = Customer::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'code'              => 'required|string|max:50|unique:customers,code,' . $customer->id,
+            'code'              => ['required', 'string', 'max:50', Rule::unique('customers')->where('created_by', $userId)->ignore($customer->id)],
             'company_name'      => 'required|string|max:255',
             'contact_person'    => 'nullable|string|max:255',
             'email'             => 'nullable|email|max:255',
@@ -143,37 +115,23 @@ class CustomerController extends Controller
             'notes'             => 'nullable|string',
         ]);
 
-        $customer->code              = $request->code;
-        $customer->company_name      = $request->company_name;
-        $customer->contact_person    = $request->contact_person;
-        $customer->email             = $request->email;
-        $customer->mobile            = $request->mobile;
-        $customer->tax_number        = $request->tax_number;
-        $customer->payment_terms     = $request->payment_terms;
-        $customer->billing_name      = $request->billing_name;
-        $customer->billing_address   = $request->billing_address;
-        $customer->billing_address2  = $request->billing_address2;
-        $customer->billing_city      = $request->billing_city;
-        $customer->billing_state     = $request->billing_state;
-        $customer->billing_country   = $request->billing_country;
-        $customer->billing_zip       = $request->billing_zip;
-        $customer->same_as_billing   = $request->same_as_billing;
-        $customer->shipping_name     = $request->shipping_name;
-        $customer->shipping_address  = $request->shipping_address;
-        $customer->shipping_address2 = $request->shipping_address2;
-        $customer->shipping_city     = $request->shipping_city;
-        $customer->shipping_state    = $request->shipping_state;
-        $customer->shipping_country  = $request->shipping_country;
-        $customer->shipping_zip      = $request->shipping_zip;
-        $customer->notes             = $request->notes;
-        $customer->last_accessed_by  = 'Administrator';
-        $customer->save();
-        $customer->refresh();
-        return response()->json($customer);
+        $customer->update(array_merge(
+            $request->only([
+                'code', 'company_name', 'contact_person', 'email', 'mobile', 'tax_number',
+                'payment_terms', 'billing_name', 'billing_address', 'billing_address2',
+                'billing_city', 'billing_state', 'billing_country', 'billing_zip',
+                'same_as_billing', 'shipping_name', 'shipping_address', 'shipping_address2',
+                'shipping_city', 'shipping_state', 'shipping_country', 'shipping_zip', 'notes',
+            ]),
+            ['last_accessed_by' => auth()->user()->name]
+        ));
+
+        return response()->json($customer->fresh());
     }
 
-    public function destroy(Customer $customer)
+    public function destroy($id)
     {
+        $customer = Customer::forUser(auth()->id())->findOrFail($id);
         $customer->delete();
         return response()->json(null, 204);
     }

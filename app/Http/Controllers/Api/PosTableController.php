@@ -12,9 +12,11 @@ class PosTableController extends Controller
 {
     public function index()
     {
-        $tables = RestaurantTable::orderBy('table_name')->get();
+        $userId = auth()->id();
+        $tables = RestaurantTable::forUser($userId)->orderBy('table_name')->get();
 
-        $openSessions = TableSession::where('status', 'Open')
+        $openSessions = TableSession::whereHas('table', fn($q) => $q->where('created_by', $userId))
+            ->where('status', 'Open')
             ->get()
             ->keyBy('table_id');
 
@@ -37,10 +39,10 @@ class PosTableController extends Controller
 
     public function waiters()
     {
-        $waiters = Waiter::orderBy('name')
+        $waiters = Waiter::forUser(auth()->id())
+            ->orderBy('name')
             ->select(['id', 'name', 'waiter_code', 'mobile'])
             ->get();
-
         return response()->json(['success' => true, 'data' => $waiters]);
     }
 }

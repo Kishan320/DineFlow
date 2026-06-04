@@ -9,13 +9,16 @@ return new class extends Migration {
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('category_name')->unique();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('category_name');
             $table->string('description')->nullable();
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
-            $table->index('category_name');
+            $table->unique(['created_by', 'category_name']);
+            $table->index('created_by');
             $table->index('description');
             $table->index('last_accessed_by');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });     
     }
 

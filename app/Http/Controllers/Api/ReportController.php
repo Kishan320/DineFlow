@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PosOrder;
 use App\Models\PosOrderItem;
-use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
-    // ── Shared date range helper ─────────────────────────────────
+    private function fmt(float $val): string
+    {
+        return number_format($val, 2);
+    }
+
     private function dateRange(Request $request): array
     {
         return [
@@ -20,28 +23,34 @@ class ReportController extends Controller
         ];
     }
 
-    private function fmt(float $val): string
+    private function orderBase(string $from, string $to): \Illuminate\Database\Eloquent\Builder
     {
-        return number_format($val, 2);
+        return PosOrder::forUser(auth()->id())
+            ->whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
+            ->whereNotIn('status', ['Cancelled']);
     }
 
-    // ── 1. Cashier Report ────────────────────────────────────────
+    private function orderItemBase(string $from, string $to): \Illuminate\Database\Eloquent\Builder
+    {
+        return PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
+            ->where('pos_orders.created_by', auth()->id())
+            ->whereBetween('pos_orders.created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
+            ->whereNotIn('pos_orders.status', ['Cancelled']);
+    }
+
     public function cashierReport(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
+        $orders      = $this->orderBase($from, $to)->get();
 
-        $orders = PosOrder::whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-            ->whereNotIn('status', ['Cancelled'])
-            ->get();
-
-        $totalBills   = $orders->count();
-        $totalSales   = $orders->sum('net_payable');
-        $totalCash    = $orders->sum('cash_amt');
-        $totalCard    = $orders->sum('card_amt');
-        $totalUpi     = $orders->sum('upi_amt');
-        $totalOthers  = $orders->sum('others_amt');
-        $totalTax     = $orders->sum('tax_amount');
-        $totalDiscount = $orders->sum('discount');
+        $totalBills      = $orders->count();
+        $totalSales      = $orders->sum('net_payable');
+        $totalCash       = $orders->sum('cash_amt');
+        $totalCard       = $orders->sum('card_amt');
+        $totalUpi        = $orders->sum('upi_amt');
+        $totalOthers     = $orders->sum('others_amt');
+        $totalTax        = $orders->sum('tax_amount');
+        $totalDiscount   = $orders->sum('discount');
         $totalCollection = $totalCash + $totalCard + $totalUpi + $totalOthers;
 
         $dineIn   = $orders->where('order_type', 'Dine In');
@@ -49,36 +58,31 @@ class ReportController extends Controller
         $delivery = $orders->where('order_type', 'Delivery');
 
         $rows = [
-            ['label' => 'Cash Bill',        'amount' => $this->fmt($totalCash > 0 ? $totalSales : $totalSales), 'bills' => $totalBills],
-            ['label' => 'Credit Bill',       'amount' => $this->fmt(0), 'bills' => 0],
-            ['label' => 'Guest Bill',        'amount' => $this->fmt(0), 'bills' => 0],
-            ['label' => 'Total Sales',       'amount' => $this->fmt($totalSales),       'bills' => $totalBills, 'total' => true],
-            ['label' => 'Cash',              'amount' => $this->fmt($totalCash),         'bills' => $orders->where('cash_amt', '>', 0)->count()],
-            ['label' => 'Card',              'amount' => $this->fmt($totalCard),         'bills' => $orders->where('card_amt', '>', 0)->count()],
-            ['label' => 'UPI',               'amount' => $this->fmt($totalUpi),          'bills' => $orders->where('upi_amt', '>', 0)->count()],
-            ['label' => 'Others',            'amount' => $this->fmt($totalOthers),       'bills' => $orders->where('others_amt', '>', 0)->count()],
-            ['label' => 'Total Collection',  'amount' => $this->fmt($totalCollection),   'bills' => $orders->whereIn('payment_status', ['Paid', 'Partial'])->count(), 'total' => true],
-            ['label' => 'Dine In',           'amount' => $this->fmt($dineIn->sum('net_payable')),   'bills' => $dineIn->count()],
-            ['label' => 'Take Away',         'amount' => $this->fmt($takeaway->sum('net_payable')), 'bills' => $takeaway->count()],
-            ['label' => 'Delivery',          'amount' => $this->fmt($delivery->sum('net_payable')), 'bills' => $delivery->count()],
-            ['label' => 'Total',             'amount' => $this->fmt($totalSales),        'bills' => $totalBills, 'total' => true],
-            ['label' => 'Tax Details',       'amount' => '',                             'bills' => '', 'total' => true],
-            ['label' => 'Total Tax Amount',  'amount' => $this->fmt($totalTax),          'bills' => '', 'total' => true],
-            ['label' => 'Total Discount',    'amount' => $this->fmt($totalDiscount),     'bills' => ''],
+            ['label' => 'Cash Bill',       'amount' => $this->fmt($totalSales),      'bills' => $totalBills],
+            ['label' => 'Credit Bill',      'amount' => $this->fmt(0),                'bills' => 0],
+            ['label' => 'Guest Bill',       'amount' => $this->fmt(0),                'bills' => 0],
+            ['label' => 'Total Sales',      'amount' => $this->fmt($totalSales),      'bills' => $totalBills, 'total' => true],
+            ['label' => 'Cash',             'amount' => $this->fmt($totalCash),        'bills' => $orders->where('cash_amt', '>', 0)->count()],
+            ['label' => 'Card',             'amount' => $this->fmt($totalCard),        'bills' => $orders->where('card_amt', '>', 0)->count()],
+            ['label' => 'UPI',              'amount' => $this->fmt($totalUpi),         'bills' => $orders->where('upi_amt', '>', 0)->count()],
+            ['label' => 'Others',           'amount' => $this->fmt($totalOthers),      'bills' => $orders->where('others_amt', '>', 0)->count()],
+            ['label' => 'Total Collection', 'amount' => $this->fmt($totalCollection),  'bills' => $orders->whereIn('payment_status', ['Paid', 'Partial'])->count(), 'total' => true],
+            ['label' => 'Dine In',          'amount' => $this->fmt($dineIn->sum('net_payable')),   'bills' => $dineIn->count()],
+            ['label' => 'Take Away',        'amount' => $this->fmt($takeaway->sum('net_payable')), 'bills' => $takeaway->count()],
+            ['label' => 'Delivery',         'amount' => $this->fmt($delivery->sum('net_payable')), 'bills' => $delivery->count()],
+            ['label' => 'Total',            'amount' => $this->fmt($totalSales),      'bills' => $totalBills, 'total' => true],
+            ['label' => 'Tax Details',      'amount' => '',                            'bills' => '', 'total' => true],
+            ['label' => 'Total Tax Amount', 'amount' => $this->fmt($totalTax),         'bills' => '', 'total' => true],
+            ['label' => 'Total Discount',   'amount' => $this->fmt($totalDiscount),    'bills' => ''],
         ];
 
         return response()->json(['success' => true, 'data' => $rows, 'from' => $from, 'to' => $to]);
     }
 
-    // ── 2. Daily Sales Report ────────────────────────────────────
     public function dailySales(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
-
-        $orders = PosOrder::whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-            ->whereNotIn('status', ['Cancelled'])
-            ->orderBy('id')
-            ->get();
+        $orders      = $this->orderBase($from, $to)->orderBy('id')->get();
 
         $rows = $orders->map(fn($o, $i) => [
             'no'         => $i + 1,
@@ -89,9 +93,9 @@ class ReportController extends Controller
             'billType'   => 'Cash Bill',
             'billAmount' => $this->fmt($o->net_payable),
             'taxAmount'  => $this->fmt($o->tax_amount),
-            'cash'       => $o->cash_amt > 0  ? $this->fmt($o->cash_amt)  : '',
-            'card'       => $o->card_amt > 0  ? $this->fmt($o->card_amt)  : '',
-            'upi'        => $o->upi_amt > 0   ? $this->fmt($o->upi_amt)   : '',
+            'cash'       => $o->cash_amt > 0   ? $this->fmt($o->cash_amt)   : '',
+            'card'       => $o->card_amt > 0   ? $this->fmt($o->card_amt)   : '',
+            'upi'        => $o->upi_amt > 0    ? $this->fmt($o->upi_amt)    : '',
             'others'     => $o->others_amt > 0 ? $this->fmt($o->others_amt) : '',
         ]);
 
@@ -107,16 +111,10 @@ class ReportController extends Controller
         return response()->json(['success' => true, 'data' => $rows, 'totals' => $totals, 'from' => $from, 'to' => $to]);
     }
 
-    // ── 3. Detailed Sales Report ─────────────────────────────────
     public function detailedSales(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
-
-        $orders = PosOrder::with('items')
-            ->whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-            ->whereNotIn('status', ['Cancelled'])
-            ->orderBy('id')
-            ->get();
+        $orders      = $this->orderBase($from, $to)->with('items')->orderBy('id')->get();
 
         $bills = $orders->map(fn($o, $i) => [
             'no'        => $i + 1,
@@ -136,7 +134,6 @@ class ReportController extends Controller
             ])->toArray(),
         ]);
 
-        // Analysis sections
         $completed  = $orders->whereIn('status', ['Completed', 'Served']);
         $partial    = $orders->whereNotIn('status', ['Completed', 'Served', 'Cancelled']);
         $dineIn     = $orders->where('order_type', 'Dine In');
@@ -152,8 +149,8 @@ class ReportController extends Controller
 
         $analysis = [
             'order' => [
-                ['label' => 'Completed Orders',      'amount' => 'Rs. ' . $this->fmt($completed->sum('net_payable')),  'count' => $completed->count()],
-                ['label' => 'Partially Paid Orders', 'amount' => 'Rs. ' . $this->fmt($partial->sum('net_payable')),    'count' => $partial->count()],
+                ['label' => 'Completed Orders',      'amount' => 'Rs. ' . $this->fmt($completed->sum('net_payable')), 'count' => $completed->count()],
+                ['label' => 'Partially Paid Orders', 'amount' => 'Rs. ' . $this->fmt($partial->sum('net_payable')),   'count' => $partial->count()],
                 ['label' => 'Total',                 'amount' => 'Rs. ' . $this->fmt($totalSales), 'count' => $orders->count(), 'total' => true],
             ],
             'bill_type' => [
@@ -177,41 +174,32 @@ class ReportController extends Controller
             'staff' => $waiterSales ?: [['label' => 'No staff data', 'amount' => 'Rs. 0.00', 'count' => 0]],
         ];
 
-        $grandTotal = $this->fmt($totalSales);
-
         return response()->json([
             'success'    => true,
             'bills'      => $bills,
             'analysis'   => $analysis,
-            'grandTotal' => $grandTotal,
+            'grandTotal' => $this->fmt($totalSales),
             'from'       => $from,
             'to'         => $to,
         ]);
     }
 
-    // ── 4. Sales Print Report (bills grouped with items) ─────────
     public function salesPrint(Request $request)
     {
-        // Reuses same data as detailed sales — same endpoint response shape
         return $this->detailedSales($request);
     }
 
-    // ── 5. Item Wise Sales ────────────────────────────────────────
     public function itemWiseSales(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
 
-        // All distinct item names for the filter dropdown
-        $itemNames = PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
-            ->whereNotIn('pos_orders.status', ['Cancelled'])
+        $itemNames = $this->orderItemBase($from, $to)
             ->distinct()
             ->orderBy('pos_order_items.item_name')
             ->pluck('pos_order_items.item_name')
             ->toArray();
 
-        $query = PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
-            ->whereBetween('pos_orders.created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-            ->whereNotIn('pos_orders.status', ['Cancelled'])
+        $query = $this->orderItemBase($from, $to)
             ->when($request->item_name, fn($q) => $q->where('pos_order_items.item_name', $request->item_name))
             ->orderBy('pos_orders.id')
             ->select(
@@ -223,7 +211,6 @@ class ReportController extends Controller
                 'pos_order_items.unit_price',
                 'pos_order_items.line_total',
                 'pos_order_items.tax_amount',
-                'pos_order_items.tax_percent'
             )
             ->get();
 
@@ -246,24 +233,14 @@ class ReportController extends Controller
             'salesAmount' => $this->fmt($query->sum(fn($r) => $r->line_total + $r->tax_amount)),
         ];
 
-        return response()->json([
-            'success'   => true,
-            'data'      => $rows,
-            'totals'    => $totals,
-            'itemNames' => $itemNames,
-            'from'      => $from,
-            'to'        => $to,
-        ]);
+        return response()->json(['success' => true, 'data' => $rows, 'totals' => $totals, 'itemNames' => $itemNames, 'from' => $from, 'to' => $to]);
     }
 
-    // ── 6. Consolidated Item Wise ────────────────────────────────
     public function consolidatedItemWise(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
 
-        $rows = PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
-            ->whereBetween('pos_orders.created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-            ->whereNotIn('pos_orders.status', ['Cancelled'])
+        $rows = $this->orderItemBase($from, $to)
             ->select(
                 DB::raw('DATE(pos_orders.created_at) as sale_date'),
                 'pos_order_items.item_name as desc',
@@ -289,18 +266,10 @@ class ReportController extends Controller
             ]);
 
         $grandTotal = $this->fmt(
-            PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
-                ->whereBetween('pos_orders.created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
-                ->whereNotIn('pos_orders.status', ['Cancelled'])
+            $this->orderItemBase($from, $to)
                 ->sum(DB::raw('pos_order_items.line_total + pos_order_items.tax_amount'))
         );
 
-        return response()->json([
-            'success'    => true,
-            'data'       => $rows,
-            'grandTotal' => $grandTotal,
-            'from'       => $from,
-            'to'         => $to,
-        ]);
+        return response()->json(['success' => true, 'data' => $rows, 'grandTotal' => $grandTotal, 'from' => $from, 'to' => $to]);
     }
 }

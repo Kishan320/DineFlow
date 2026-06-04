@@ -9,7 +9,8 @@ return new class extends Migration {
     {
         Schema::create('taxes', function (Blueprint $table) {
             $table->id();
-            $table->string('hsn_code')->unique();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('hsn_code');
             $table->string('description');
             $table->decimal('cgst', 8, 2)->default(0);
             $table->decimal('sgst', 8, 2)->default(0);
@@ -20,12 +21,13 @@ return new class extends Migration {
             $table->decimal('tax_percent', 8, 2)->default(0);
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
-            $table->index('hsn_code');
+            $table->unique(['created_by', 'hsn_code']);
+            $table->index('created_by');
             $table->index('description');
             $table->index(['cgst', 'sgst', 'igst']);
             $table->index('tax_percent');
             $table->index('last_accessed_by');
-            
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

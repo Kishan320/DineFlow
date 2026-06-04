@@ -9,14 +9,17 @@ return new class extends Migration {
     {
         Schema::create('restaurant_tables', function (Blueprint $table) {
             $table->id();
-            $table->string('table_name')->unique();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('table_name');
             $table->string('description')->nullable();
             $table->unsignedInteger('max_seats')->default(1);
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
-            $table->index('table_name');
+            $table->unique(['created_by', 'table_name']);
+            $table->index('created_by');
             $table->index('max_seats');
             $table->index('last_accessed_by');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

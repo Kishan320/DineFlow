@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class PosOrder extends Model
 {
+    use BelongsToUser;
+
     protected $table = 'pos_orders';
 
     protected $fillable = [
-        'order_no', 'invoice_no', 'session_id',
+        'created_by', 'order_no', 'invoice_no', 'session_id',
         'customer_id', 'customer_name', 'customer_phone',
         'table_id', 'table_label', 'waiter_id', 'waiter_name',
         'order_type', 'covers', 'notes',

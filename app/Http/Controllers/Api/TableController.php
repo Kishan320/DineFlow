@@ -5,32 +5,25 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TableController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = RestaurantTable::query()
-            ->select(['id', 'table_name', 'description', 'max_seats', 'last_accessed_by', 'updated_at']);
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = RestaurantTable::forUser($userId)
+            ->select(['id', 'table_name', 'description', 'max_seats', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('table_name', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        $query->orderByDesc('id');
-        $tables = $query->paginate($perPage, ['*'], 'page', $page);
+        $tables = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -47,41 +40,48 @@ class TableController extends Controller
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'table_name'  => 'required|string|max:100|unique:restaurant_tables,table_name',
+            'table_name'  => ['required', 'string', 'max:100', Rule::unique('restaurant_tables')->where('created_by', $userId)],
             'description' => 'nullable|string|max:255',
             'max_seats'   => 'required|integer|min:1',
         ]);
 
-        $table = new RestaurantTable();
-        $table->table_name      = $request->table_name;
-        $table->description     = $request->description;
-        $table->max_seats       = $request->max_seats;
-        $table->last_accessed_by = 'Administrator';
-        $table->save();
-        $table->refresh();
-        return response()->json($table, 201);
+        $table = RestaurantTable::create([
+            'created_by'       => $userId,
+            'table_name'       => $request->table_name,
+            'description'      => $request->description,
+            'max_seats'        => $request->max_seats,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($table->fresh(), 201);
     }
 
-    public function update(Request $request, RestaurantTable $table)
+    public function update(Request $request, $id)
     {
+        $userId = auth()->id();
+        $table  = RestaurantTable::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'table_name'  => 'required|string|max:100|unique:restaurant_tables,table_name,' . $table->id,
+            'table_name'  => ['required', 'string', 'max:100', Rule::unique('restaurant_tables')->where('created_by', $userId)->ignore($table->id)],
             'description' => 'nullable|string|max:255',
             'max_seats'   => 'required|integer|min:1',
         ]);
 
-        $table->table_name       = $request->table_name;
-        $table->description      = $request->description;
-        $table->max_seats        = $request->max_seats;
-        $table->last_accessed_by = 'Administrator';
-        $table->save();
-        $table->refresh();
-        return response()->json($table);
+        $table->update([
+            'table_name'       => $request->table_name,
+            'description'      => $request->description,
+            'max_seats'        => $request->max_seats,
+            'last_accessed_by' => auth()->user()->name,
+        ]);
+
+        return response()->json($table->fresh());
     }
 
-    public function destroy(RestaurantTable $table)
+    public function destroy($id)
     {
+        $table = RestaurantTable::forUser(auth()->id())->findOrFail($id);
         $table->delete();
         return response()->json(null, 204);
     }

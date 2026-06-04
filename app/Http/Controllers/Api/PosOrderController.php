@@ -13,8 +13,11 @@ class PosOrderController extends Controller
 
     public function index(Request $request)
     {
+        $userId  = auth()->id();
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 25;
-        $query   = PosOrder::with(['items'])
+
+        $query = PosOrder::forUser($userId)
+            ->with(['items'])
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('order_no', 'like', "%{$request->search}%")
                   ->orWhere('invoice_no', 'like', "%{$request->search}%")
@@ -67,8 +70,10 @@ class PosOrderController extends Controller
             'payment_note'            => 'nullable|string',
         ]);
 
-        $data = $request->all();
-        $data['last_accessed_by'] = $request->user()?->name ?? 'Administrator';
+        $userId = auth()->id();
+        $data   = $request->all();
+        $data['created_by']       = $userId;
+        $data['last_accessed_by'] = auth()->user()->name;
 
         if ($request->customer_id) {
             $customer = \App\Models\Customer::find($request->customer_id);
@@ -87,47 +92,44 @@ class PosOrderController extends Controller
         }
 
         $order = $this->posService->createOrder($data);
-
         return response()->json(['success' => true, 'data' => $order], 201);
     }
 
-    public function show(PosOrder $posOrder)
+    public function show($id)
     {
-        $posOrder->load(['items', 'kots.items', 'statusHistories']);
-        return response()->json(['success' => true, 'data' => $posOrder]);
+        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        $order->load(['items', 'kots.items', 'statusHistories']);
+        return response()->json(['success' => true, 'data' => $order]);
     }
 
-    public function updateStatus(Request $request, PosOrder $posOrder)
+    public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:Pending,Confirmed,Preparing,Ready,Served,Completed,Cancelled',
         ]);
 
-        $order = $this->posService->updateOrderStatus(
-            $posOrder,
-            $request->status,
-            $request->user()?->name ?? 'Administrator'
-        );
-
+        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        $order = $this->posService->updateOrderStatus($order, $request->status, auth()->user()->name);
         return response()->json(['success' => true, 'data' => $order]);
     }
 
     public function ongoing()
     {
-        $orders = PosOrder::with(['items'])
+        $orders = PosOrder::forUser(auth()->id())
+            ->with(['items'])
             ->whereNotIn('status', ['Completed', 'Cancelled'])
             ->orderByDesc('id')
             ->get();
-
         return response()->json(['success' => true, 'data' => $orders]);
     }
 
-    public function destroy(PosOrder $posOrder)
+    public function destroy($id)
     {
-        if (!in_array($posOrder->status, ['Pending', 'Cancelled'])) {
+        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        if (!in_array($order->status, ['Pending', 'Cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Only pending or cancelled orders can be deleted'], 422);
         }
-        $posOrder->delete();
+        $order->delete();
         return response()->json(null, 204);
     }
 }

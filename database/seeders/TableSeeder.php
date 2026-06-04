@@ -9,8 +9,8 @@ class TableSeeder extends Seeder
 {
     public function run(): void
     {
-        $total = 10_000;
-        $chunkSize = 500;
+        $total = 1000;
+        $chunkSize = 50;
         $now = now()->toDateTimeString();
 
         $descriptions = ['Window Seating', 'Corner Table', 'Center Dining', 'Private Area', 'Bar Counter', 'Outdoor Patio', 'Indoor Lounge', 'VIP Section'];

@@ -6,35 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = (int) $request->get('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
-        }
+        $userId  = auth()->id();
+        $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
+        $search  = trim($request->get('search', ''));
 
-        $search = trim($request->get('search', ''));
-        $page = (int) $request->get('page', 1);
-
-        $query = Item::query()
-            ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at']);
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+        $query = Item::forUser($userId)
+            ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at'])
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('item_name', 'LIKE', "%{$search}%")
                   ->orWhere('code', 'LIKE', "%{$search}%")
                   ->orWhere('category', 'LIKE', "%{$search}%")
                   ->orWhere('state', 'LIKE', "%{$search}%")
-                  ->orWhere('item_type', 'LIKE', "%{$search}%")
-                  ->orWhere('last_accessed_by', 'LIKE', "%{$search}%");
-            });
-        }
+                  ->orWhere('item_type', 'LIKE', "%{$search}%");
+            }))
+            ->orderByDesc('id');
 
-        $query->orderByDesc('id');
-        $items = $query->paginate($perPage, ['*'], 'page', $page);
+        $items = $query->paginate($perPage, ['*'], 'page', (int)$request->get('page', 1));
 
         return response()->json([
             'success'      => true,
@@ -51,8 +44,9 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
+        $userId = auth()->id();
         $request->validate([
-            'code'             => 'required|string|max:50|unique:items,code',
+            'code'             => ['required', 'string', 'max:50', Rule::unique('items')->where('created_by', $userId)],
             'item_name'        => 'required|string|max:255',
             'category'         => 'nullable|string|max:255',
             'restaurant_price' => 'required|numeric|min:0',
@@ -66,38 +60,43 @@ class ItemController extends Controller
             'image'            => 'nullable|image|max:150',
         ]);
 
-        $item = new Item();
-        $item->code             = $request->code;
-        $item->item_name        = $request->item_name;
-        $item->category         = $request->category;
-        $item->restaurant_price = $request->restaurant_price;
-        $item->bar_price        = $request->bar_price;
-        $item->room_price       = $request->room_price;
-        $item->tax_type         = $request->tax_type;
-        $item->tax              = $request->tax;
-        $item->state            = $request->state;
-        $item->item_type        = $request->item_type;
-        $item->note             = $request->note;
-        $item->last_accessed_by = 'Administrator';
+        $data = [
+            'created_by'       => $userId,
+            'code'             => $request->code,
+            'item_name'        => $request->item_name,
+            'category'         => $request->category,
+            'restaurant_price' => $request->restaurant_price,
+            'bar_price'        => $request->bar_price,
+            'room_price'       => $request->room_price,
+            'tax_type'         => $request->tax_type,
+            'tax'              => $request->tax,
+            'state'            => $request->state,
+            'item_type'        => $request->item_type,
+            'note'             => $request->note,
+            'last_accessed_by' => auth()->user()->name,
+        ];
 
         if ($request->hasFile('image')) {
-            $item->image_url = '/storage/' . $request->file('image')->store('items', 'public');
+            $data['image_url'] = '/storage/' . $request->file('image')->store('items', 'public');
         }
 
-        $item->save();
-        $item->refresh();
-        return response()->json($item, 201);
+        $item = Item::create($data);
+        return response()->json($item->fresh(), 201);
     }
 
-    public function show(Item $item)
+    public function show($id)
     {
+        $item = Item::forUser(auth()->id())->findOrFail($id);
         return response()->json($item);
     }
 
-    public function update(Request $request, Item $item)
+    public function update(Request $request, $id)
     {
+        $userId = auth()->id();
+        $item   = Item::forUser($userId)->findOrFail($id);
+
         $request->validate([
-            'code'             => 'required|string|max:50|unique:items,code,' . $item->id,
+            'code'             => ['required', 'string', 'max:50', Rule::unique('items')->where('created_by', $userId)->ignore($item->id)],
             'item_name'        => 'required|string|max:255',
             'category'         => 'nullable|string|max:255',
             'restaurant_price' => 'required|numeric|min:0',
@@ -111,33 +110,35 @@ class ItemController extends Controller
             'image'            => 'nullable|image|max:150',
         ]);
 
-        $item->code             = $request->code;
-        $item->item_name        = $request->item_name;
-        $item->category         = $request->category;
-        $item->restaurant_price = $request->restaurant_price;
-        $item->bar_price        = $request->bar_price;
-        $item->room_price       = $request->room_price;
-        $item->tax_type         = $request->tax_type;
-        $item->tax              = $request->tax;
-        $item->state            = $request->state;
-        $item->item_type        = $request->item_type;
-        $item->note             = $request->note;
-        $item->last_accessed_by = 'Administrator';
+        $data = [
+            'code'             => $request->code,
+            'item_name'        => $request->item_name,
+            'category'         => $request->category,
+            'restaurant_price' => $request->restaurant_price,
+            'bar_price'        => $request->bar_price,
+            'room_price'       => $request->room_price,
+            'tax_type'         => $request->tax_type,
+            'tax'              => $request->tax,
+            'state'            => $request->state,
+            'item_type'        => $request->item_type,
+            'note'             => $request->note,
+            'last_accessed_by' => auth()->user()->name,
+        ];
 
         if ($request->hasFile('image')) {
             if ($item->image_url) {
                 Storage::disk('public')->delete(str_replace('/storage/', '', $item->image_url));
             }
-            $item->image_url = '/storage/' . $request->file('image')->store('items', 'public');
+            $data['image_url'] = '/storage/' . $request->file('image')->store('items', 'public');
         }
 
-        $item->save();
-        $item->refresh();
-        return response()->json($item, 200);
+        $item->update($data);
+        return response()->json($item->fresh());
     }
 
-    public function destroy(Item $item)
+    public function destroy($id)
     {
+        $item = Item::forUser(auth()->id())->findOrFail($id);
         if ($item->image_url) {
             Storage::disk('public')->delete(str_replace('/storage/', '', $item->image_url));
         }
