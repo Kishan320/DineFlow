@@ -11,26 +11,27 @@
         :class="{ active: posStore.orderMode === m.id }"
       >
         {{ m.label }}
-        <span v-if="m.id === 'ongoing' && activeOngoingCount > 0" class="order-tab-badge">
-          {{ activeOngoingCount }}
+        <span v-if="m.id === 'ongoing' && posStore.activeOngoingCount > 0" class="order-tab-badge">
+          {{ posStore.activeOngoingCount }}
         </span>
       </button>
     </div>
 
-    <!-- ── ONGOING ORDERS VIEW ── -->
+    <!-- ONGOING VIEW -->
     <div v-if="posStore.orderMode === 'ongoing'" class="pos-ongoing-view">
       <OngoingOrdersPanel
         :orders="posStore.ongoingOrders"
+        :loading="posStore.loadingOngoing"
         @resume="posStore.orderMode = 'new'"
         @kot="openKotForOrder"
         @bill="openBillForOrder"
         @complete="handleComplete"
+        @cancel="handleCancel"
       />
     </div>
 
-    <!-- ── NEW ORDER VIEW ── -->
+    <!-- NEW ORDER VIEW -->
     <template v-else>
-      <!-- Mobile tab bar -->
       <div v-if="!isDesktop" class="pos-tabs">
         <button
           v-for="tab in tabs"
@@ -49,7 +50,15 @@
 
       <div class="pos-body">
         <div v-show="isDesktop || activeTab === 'products'" class="pos-products">
-          <POSProducts :items="menuItems" :categories="menuCategories" @add="posStore.addToCart" />
+          <POSProducts
+            :products="posStore.products"
+            :categories="posStore.categories"
+            :meta="posStore.productsMeta"
+            :loading="posStore.loadingProducts"
+            :session="posStore.session"
+            @add="posStore.addToCart"
+            @load-products="posStore.loadProducts"
+          />
         </div>
         <div
           v-show="isDesktop || activeTab === 'cart'"
@@ -57,59 +66,72 @@
           :class="{ 'pos-cart-panel--mobile': !isDesktop }"
         >
           <POSCartPanel
-            @kot="kotOpen = true; kotOrder = null"
-            @bill-preview="billOpen = true; billOrder = null"
+            @kot="openKot"
+            @bill-preview="openBillPreview"
             @place-order="handlePlaceOrder"
           />
         </div>
       </div>
     </template>
 
-    <!-- Modals -->
+    <!-- KOT Modal -->
     <KOTModal
       v-if="kotOpen"
       :order="kotOrder"
       @close="kotOpen = false; kotOrder = null"
     />
+
+    <!-- Bill Preview Modal -->
     <BillPreviewModal
       v-if="billOpen"
       :order="billOrder"
       @close="billOpen = false; billOrder = null"
     />
+
+    <!-- Order Success Modal -->
     <OrderSuccessModal
       v-if="successOpen"
-      :bill-no="lastBillNo"
-      :total="lastTotal"
-      @close="successOpen = false"
+      :order="lastOrder"
+      @close="successOpen = false; lastOrder = null"
+      @new-order="successOpen = false; lastOrder = null; activeTab = 'products'"
     />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { LayoutGrid, ShoppingCart } from '@lucide/vue';
 import { usePOSStore } from '@/stores/posStore.js';
-import { menuItems, menuCategories } from '@/utils/mockData.js';
-import POSProducts        from './POSProducts.vue';
-import POSCartPanel       from './POSCartPanel.vue';
-import KOTModal           from './KOTModal.vue';
-import BillPreviewModal   from './BillPreviewModal.vue';
-import OrderSuccessModal  from './OrderSuccessModal.vue';
+import POSProducts       from './POSProducts.vue';
+import POSCartPanel      from './POSCartPanel.vue';
+import KOTModal          from './KOTModal.vue';
+import BillPreviewModal  from './BillPreviewModal.vue';
+import OrderSuccessModal from './OrderSuccessModal.vue';
 import OngoingOrdersPanel from './OngoingOrdersPanel.vue';
 
 const posStore    = usePOSStore();
 const kotOpen     = ref(false);
 const billOpen    = ref(false);
 const successOpen = ref(false);
-const lastBillNo  = ref('');
-const lastTotal   = ref(0);
+const lastOrder   = ref(null);
 const activeTab   = ref('products');
 const kotOrder    = ref(null);
 const billOrder   = ref(null);
 
 const isDesktop = ref(window.innerWidth >= 1024);
 function onResize() { isDesktop.value = window.innerWidth >= 1024; }
-onMounted(() => window.addEventListener('resize', onResize));
+onMounted(async () => {
+  window.addEventListener('resize', onResize);
+  await Promise.all([
+    posStore.loadActiveSession(),
+    posStore.loadProducts(),
+    posStore.loadCategories(),
+    posStore.loadTables(),
+    posStore.loadWaiters(),
+    posStore.loadOngoing(),
+  ]);
+});
 onUnmounted(() => window.removeEventListener('resize', onResize));
 
 const tabs = [
@@ -117,13 +139,19 @@ const tabs = [
   { id: 'cart',     label: 'Cart',     icon: ShoppingCart },
 ];
 
-const activeOngoingCount = computed(() =>
-  posStore.ongoingOrders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled').length
-);
+function openKot() {
+  kotOrder.value = null;
+  kotOpen.value  = true;
+}
 
 function openKotForOrder(order) {
   kotOrder.value = order;
   kotOpen.value  = true;
+}
+
+function openBillPreview() {
+  billOrder.value = null;
+  billOpen.value  = true;
 }
 
 function openBillForOrder(order) {
@@ -131,15 +159,22 @@ function openBillForOrder(order) {
   billOpen.value  = true;
 }
 
-function handleComplete(orderId) {
-  posStore.completeOrder(orderId);
+async function handleComplete(orderId) {
+  await posStore.completeOrder(orderId);
 }
 
-function handlePlaceOrder() {
-  lastBillNo.value = `BILL-${2854 + Math.floor(Math.random() * 10)}`;
-  lastTotal.value  = posStore.total;
-  posStore.completeOrder(posStore.currentOrderId);
-  successOpen.value = true;
-  activeTab.value   = 'products';
+async function handleCancel(orderId) {
+  await posStore.cancelOrder(orderId);
+}
+
+async function handlePlaceOrder() {
+  try {
+    const order = await posStore.placeOrder();
+    lastOrder.value   = order;
+    successOpen.value = true;
+    activeTab.value   = 'products';
+  } catch (err) {
+    console.error('Order failed:', err);
+  }
 }
 </script>

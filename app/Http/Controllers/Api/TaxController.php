@@ -45,6 +45,12 @@ class TaxController extends Controller
         ]);
     }
 
+    public function list()
+    {
+        $taxes = Tax::select('id', 'description', 'tax_percent')->orderBy('description')->get();
+        return response()->json(['success' => true, 'data' => $taxes]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

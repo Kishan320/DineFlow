@@ -54,6 +54,12 @@ class CategoryController extends Controller
         ]);
     }
 
+    public function list()
+    {
+        $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
+        return response()->json(['success' => true, 'data' => $categories]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

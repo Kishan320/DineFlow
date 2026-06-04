@@ -44,7 +44,7 @@
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Category</label>
             <select v-model="form.category" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
               <option value="">Select an option</option>
-              <option v-for="c in categoryOptions" :key="c" :value="c">{{ c }}</option>
+              <option v-for="c in categoryOptions" :key="c.id" :value="c.category_name">{{ c.category_name }}</option>
             </select>
           </div>
           <div>
@@ -74,7 +74,7 @@
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Tax <span style="color:var(--danger)">*</span></label>
             <select v-model="form.tax" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
               <option value="">Select an option</option>
-              <option v-for="t in taxOptions" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in taxOptions" :key="t.id" :value="t.description">{{ t.description }} ({{ t.tax_percent }}%)</option>
             </select>
           </div>
         </div>
@@ -151,7 +151,7 @@
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowLeft as ArrowLeftIcon, ImageOff as ImageOffIcon, Trash2 as Trash2Icon } from '@lucide/vue';
-import { itemApi } from '@/services/settingsApi';
+import { itemApi, categoryApi, taxApi } from '@/services/settingsApi';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
@@ -159,13 +159,8 @@ const route  = useRoute();
 
 const isEdit = computed(() => !!route.params.id);
 
-const categoryOptions = [
-  'New Menu June', 'Break Fast Combo', 'Hot Beverage', 'Briyani Chicken',
-  'Briyani Egg', 'Briyani Mutton', 'Briyani Veg', 'Dosa', 'Starters',
-  'Curries', 'Breads at its best', 'Desserts', 'Cold Beverages', 'Meals',
-  'Ayyan Appetizers', 'Banquet', 'Break Fast', 'Chaat Items', 'Chinese',
-];
-const taxOptions = ['GST (5.00%)', 'GST (12.00%)', 'GST (18.00%)', 'GST (28.00%)', 'VAT (5.00%)', 'Tax Exempt'];
+const categoryOptions = ref([]);
+const taxOptions      = ref([]);
 
 const blankForm = () => ({
   code: '', item_name: '', category: '', restaurant_price: '', bar_price: '', room_price: '',
@@ -180,6 +175,14 @@ const loading      = ref(false);
 const submitting   = ref(false);
 
 onMounted(async () => {
+  const [catRes, taxRes] = await Promise.allSettled([
+    categoryApi.listAll(),
+    taxApi.listAll(),
+  ]);
+  if (catRes.status === 'fulfilled') categoryOptions.value = catRes.value?.data ?? [];
+  if (taxRes.status === 'fulfilled') taxOptions.value      = taxRes.value?.data ?? [];
+  if (taxRes.status === 'fulfilled') taxOptions.value      = taxRes.value?.data  ?? taxRes.value  ?? [];
+
   if (isEdit.value) {
     loading.value = true;
     try {
