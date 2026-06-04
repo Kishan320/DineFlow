@@ -35,12 +35,14 @@
             <option value="Consolidated Day Wise">Consolidated Day Wise</option>
           </select>
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
             <TableIcon :size="12" /> Excel
@@ -58,14 +60,12 @@
 
           <!-- Bills -->
           <div v-for="bill in bills" :key="bill.salesCode" class="border rounded-lg overflow-hidden" style="border-color:var(--border)">
-            <!-- Bill header -->
             <div class="grid grid-cols-4 px-3 py-2 text-xs font-semibold border-b" style="background:color-mix(in srgb,var(--muted) 50%,transparent);border-color:var(--border);color:var(--foreground)">
               <span>#{{ bill.no }}</span>
               <span>{{ bill.salesCode }}</span>
               <span>{{ bill.date }}</span>
               <span>{{ bill.customer }} | {{ bill.billType }} | Rs. {{ bill.amount }}</span>
             </div>
-            <!-- Items -->
             <table class="w-full text-xs">
               <thead>
                 <tr style="background:color-mix(in srgb,var(--muted) 30%,transparent)">
@@ -95,20 +95,16 @@
           <!-- Total -->
           <div class="flex justify-end">
             <div class="border rounded-lg px-4 py-2 text-xs font-semibold" style="border-color:var(--border);background:color-mix(in srgb,var(--primary) 8%,transparent);color:var(--foreground)">
-              Total &nbsp; Rs. 2,054.00
+              Total &nbsp; Rs. {{ grandTotal }}
             </div>
           </div>
 
           <!-- Analysis sections -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Order Analysis -->
-            <AnalysisTable title="ORDER ANALYSIS" :rows="orderAnalysis" />
-            <!-- Bill Type Analysis -->
-            <AnalysisTable title="BILL TYPE ANALYSIS" :rows="billTypeAnalysis" />
-            <!-- Pay Mode Analysis -->
-            <AnalysisTable title="PAY MODE ANALYSIS" :rows="payModeAnalysis" />
-            <!-- Sales By Staff -->
-            <AnalysisTable title="SALES BY STAFF" :rows="salesByStaff" />
+          <div v-if="analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnalysisTable title="ORDER ANALYSIS"     :rows="analysis.order" />
+            <AnalysisTable title="BILL TYPE ANALYSIS" :rows="analysis.bill_type" />
+            <AnalysisTable title="PAY MODE ANALYSIS"  :rows="analysis.pay_mode" />
+            <AnalysisTable title="SALES BY STAFF"     :rows="analysis.staff" />
           </div>
         </div>
       </template>
@@ -119,64 +115,36 @@
 <script setup>
 import { ref, defineComponent, h } from 'vue';
 import { RefreshCw as RefreshCwIcon, Table as TableIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate   = ref('2021-08-10');
-const toDate     = ref('2021-08-10');
+const today      = new Date().toISOString().slice(0, 10);
+const fromDate   = ref(today);
+const toDate     = ref(today);
 const billType   = ref('');
 const reportType = ref('Detailed Sales');
 const generated  = ref(false);
+const loading    = ref(false);
+const error      = ref('');
+const bills      = ref([]);
+const analysis   = ref(null);
+const grandTotal = ref('0.00');
 
-const bills = [
-  {
-    no: 1, salesCode: '210810-001', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', amount: '1,129.00',
-    items: [
-      { desc: 'PEPPER CHICKEN GRAVY/dry', price: '200.00', qty: 1, value: '200.00', tax: '10.00', amount: '210.00' },
-      { desc: 'Nattu Kozhi Biryani',      price: '230.00', qty: 1, value: '230.00', tax: '11.50', amount: '241.50' },
-      { desc: 'Chicken Fried Rice',       price: '190.00', qty: 1, value: '190.00', tax: '9.50',  amount: '199.50' },
-      { desc: 'Parota 1PCS',              price: '30.00',  qty: 1, value: '30.00',  tax: '1.50',  amount: '31.50'  },
-      { desc: 'Lime soda sweet',          price: '60.00',  qty: 1, value: '60.00',  tax: '3.00',  amount: '63.00'  },
-      { desc: 'Milk Shakes with Ice Cream', price: '175.00', qty: 1, value: '175.00', tax: '8.75', amount: '183.75' },
-    ],
-  },
-  {
-    no: 2, salesCode: '210810-002', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', amount: '389.00',
-    items: [
-      { desc: 'Jeera Rice',          price: '140.00', qty: 1, value: '140.00', tax: '7.00',  amount: '147.00' },
-      { desc: 'PRAWN KOTHU PAROTA',  price: '230.00', qty: 1, value: '230.00', tax: '11.50', amount: '241.50' },
-    ],
-  },
-  {
-    no: 3, salesCode: '210810-003', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', amount: '536.00',
-    items: [
-      { desc: 'Chicken Garlic Naan',       price: '100.00', qty: 1, value: '100.00', tax: '5.00',  amount: '105.00' },
-      { desc: 'Kadai Paneer/MUSHROOM',     price: '180.00', qty: 1, value: '180.00', tax: '9.00',  amount: '189.00' },
-      { desc: 'Nattu Kozhi Biryani',       price: '230.00', qty: 1, value: '230.00', tax: '11.50', amount: '241.50' },
-    ],
-  },
-];
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.detailedSales({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value || undefined });
+    bills.value      = data.bills;
+    analysis.value   = data.analysis;
+    grandTotal.value = data.grandTotal;
+    generated.value  = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 
-const orderAnalysis   = [
-  { label: 'Completed Orders',      amount: 'Rs. 1,518.00', count: 2 },
-  { label: 'Partially Paid Orders', amount: 'Rs. 536.00',   count: 1 },
-  { label: 'Total',                 amount: 'Rs. 2,054.00', count: 3, total: true },
-];
-const billTypeAnalysis = [
-  { label: 'Cash Bill',   amount: 'Rs. 2,054.00', count: 3 },
-  { label: 'Credit Bill', amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Guest Bill',  amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Total',       amount: 'Rs. 2,054.00', count: 3, total: true },
-];
-const payModeAnalysis  = [
-  { label: 'Cash',  amount: 'Rs. 1,129.00', count: 1 },
-  { label: 'Card',  amount: 'Rs. 389.00',   count: 1 },
-  { label: 'Other', amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Total', amount: 'Rs. 1,518.00', count: 2, total: true },
-];
-const salesByStaff     = [
-  { label: 'Selvakannan', amount: 'Rs. 2,054.00', count: 3 },
-];
-
-// Inline sub-component for analysis tables
 const AnalysisTable = defineComponent({
   props: { title: String, rows: Array },
   setup(props) {
@@ -184,7 +152,7 @@ const AnalysisTable = defineComponent({
       h('div', { class: 'px-3 py-2 text-xs font-semibold text-center border-b', style: 'background:color-mix(in srgb,var(--muted) 50%,transparent);border-color:var(--border);color:var(--foreground)' }, props.title),
       h('table', { class: 'w-full text-xs' },
         h('tbody', null,
-          props.rows.map(row =>
+          (props.rows ?? []).map(row =>
             h('tr', {
               class: 'border-b last:border-0',
               style: `border-color:var(--border);${row.total ? 'background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600' : ''}`

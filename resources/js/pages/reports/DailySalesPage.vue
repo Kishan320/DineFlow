@@ -29,12 +29,14 @@
             <option value="Guest Bill">Guest Bill</option>
           </select>
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
             <TableIcon :size="12" /> Excel
@@ -71,7 +73,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, i) in rows" :key="row.salesCode" class="border-b" style="border-color:var(--border)">
+                <tr v-for="(row, i) in rows" :key="i" class="border-b" style="border-color:var(--border)">
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--muted-foreground)">{{ i + 1 }}</td>
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--foreground)">{{ row.billNo }}</td>
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--foreground)">{{ row.salesCode }}</td>
@@ -85,13 +87,13 @@
                   <td class="px-3 py-2 text-right" style="color:var(--foreground)">{{ row.others ? 'Rs. ' + row.others : '' }}</td>
                 </tr>
                 <!-- Total row -->
-                <tr style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
+                <tr v-if="totals" style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
                   <td colspan="6" class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Total</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 2054.00</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 97.75</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 1129.00</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 389.00</td>
-                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. 0.00</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.billAmount }}</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.taxAmount }}</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.cash }}</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.card }}</td>
+                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. {{ totals.others }}</td>
                 </tr>
               </tbody>
             </table>
@@ -105,15 +107,30 @@
 <script setup>
 import { ref } from 'vue';
 import { RefreshCw as RefreshCwIcon, Table as TableIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate  = ref('2021-08-10');
-const toDate    = ref('2021-08-10');
-const billType  = ref('');
+const today    = new Date().toISOString().slice(0, 10);
+const fromDate = ref(today);
+const toDate   = ref(today);
+const billType = ref('');
 const generated = ref(false);
+const loading   = ref(false);
+const error     = ref('');
+const rows      = ref([]);
+const totals    = ref(null);
 
-const rows = [
-  { billNo: 1, salesCode: '210810-001', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', billAmount: '1,129.00', taxAmount: '53.75', cash: '1,129.00', card: '',      others: '' },
-  { billNo: 2, salesCode: '210810-002', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', billAmount: '389.00',   taxAmount: '18.50', cash: '',         card: '389.00', others: '' },
-  { billNo: 3, salesCode: '210810-003', date: '10-08-21', customer: 'Walkin Customer', billType: 'Cash Bill', billAmount: '536.00',   taxAmount: '25.50', cash: '',         card: '',       others: '' },
-];
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.dailySales({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value || undefined });
+    rows.value    = data.data;
+    totals.value  = data.totals;
+    generated.value = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 </script>

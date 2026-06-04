@@ -23,15 +23,18 @@
         <div>
           <label class="block text-xs font-medium mb-1" style="color:var(--foreground)">Item Name</label>
           <select v-model="selectedItem" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[200px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
+            <option value="">– All Items –</option>
             <option v-for="item in itemOptions" :key="item" :value="item">{{ item }}</option>
           </select>
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
             <TableIcon :size="12" /> Excel
@@ -44,7 +47,7 @@
         <div class="px-4 pb-6 mt-3">
           <div class="text-center mb-3">
             <p class="text-sm font-semibold" style="color:var(--foreground)">Sales Report</p>
-            <p class="text-xs" style="color:var(--muted-foreground)">{{ fromDate }} - {{ toDate }} | {{ selectedItem }}</p>
+            <p class="text-xs" style="color:var(--muted-foreground)">{{ fromDate }} - {{ toDate }}{{ selectedItem ? ' | ' + selectedItem : '' }}</p>
           </div>
           <div class="border rounded-lg overflow-x-auto" style="border-color:var(--border)">
             <table class="w-full text-xs">
@@ -61,7 +64,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, i) in filteredRows" :key="row.salesCode" class="border-b" style="border-color:var(--border)">
+                <tr v-for="(row, i) in rows" :key="i" class="border-b" style="border-color:var(--border)">
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--muted-foreground)">{{ i + 1 }}</td>
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--foreground)">{{ row.billNo }}</td>
                   <td class="px-3 py-2 border-r" style="border-color:var(--border);color:var(--foreground)">{{ row.salesCode }}</td>
@@ -71,12 +74,12 @@
                   <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ row.taxAmount }}</td>
                   <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. {{ row.salesAmount }}</td>
                 </tr>
-                <!-- Total -->
-                <tr style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
-                  <td colspan="5" class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Total</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 460.00</td>
-                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. 23.00</td>
-                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. 483.00</td>
+                <tr v-if="totals" style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
+                  <td colspan="4" class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Total</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">{{ totals.qty }}</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.salesValue }}</td>
+                  <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Rs. {{ totals.taxAmount }}</td>
+                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. {{ totals.salesAmount }}</td>
                 </tr>
               </tbody>
             </table>
@@ -88,24 +91,38 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { RefreshCw as RefreshCwIcon, Table as TableIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate    = ref('2021-08-10');
-const toDate      = ref('2021-08-10');
-const generated   = ref(false);
+const today        = new Date().toISOString().slice(0, 10);
+const fromDate     = ref(today);
+const toDate       = ref(today);
+const selectedItem = ref('');
+const itemOptions  = ref([]);
+const generated    = ref(false);
+const loading      = ref(false);
+const error        = ref('');
+const rows         = ref([]);
+const totals       = ref(null);
 
-const itemOptions = [
-  'Nattu Kozhi Biryani', 'Chicken Biryani', 'Mutton Biryani', 'Veg Biryani',
-  'Masala Dosa', 'Chicken 65', 'Paneer Butter Masala', 'Butter Naan',
-];
-const selectedItem = ref('Nattu Kozhi Biryani');
-
-const allRows = [
-  { billNo: 1, salesCode: '210810-001', date: '10-08-21', item: 'Nattu Kozhi Biryani', qty: 1, salesValue: '230.00', taxAmount: '11.50', salesAmount: '241.50' },
-  { billNo: 3, salesCode: '210810-003', date: '10-08-21', item: 'Nattu Kozhi Biryani', qty: 1, salesValue: '230.00', taxAmount: '11.50', salesAmount: '241.50' },
-  { billNo: 2, salesCode: '210810-002', date: '10-08-21', item: 'Chicken Biryani',     qty: 2, salesValue: '360.00', taxAmount: '18.00', salesAmount: '378.00' },
-];
-
-const filteredRows = computed(() => allRows.filter(r => r.item === selectedItem.value));
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.itemWise({
+      from_date:  fromDate.value,
+      to_date:    toDate.value,
+      item_name:  selectedItem.value || undefined,
+    });
+    rows.value        = data.data;
+    totals.value      = data.totals;
+    itemOptions.value = data.itemNames ?? itemOptions.value;
+    generated.value   = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 </script>

@@ -35,12 +35,14 @@
             <option value="Detailed Sales">Detailed Sales</option>
           </select>
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
             <TableIcon :size="12" /> Excel
@@ -80,10 +82,9 @@
                   <td class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">{{ row.tax }}</td>
                   <td class="px-3 py-2 text-right" style="color:var(--foreground)">{{ row.amount }}</td>
                 </tr>
-                <!-- Total -->
                 <tr style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
                   <td colspan="7" class="px-3 py-2 text-right border-r" style="border-color:var(--border);color:var(--foreground)">Total</td>
-                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. 2052.75</td>
+                  <td class="px-3 py-2 text-right" style="color:var(--foreground)">Rs. {{ grandTotal }}</td>
                 </tr>
               </tbody>
             </table>
@@ -97,24 +98,35 @@
 <script setup>
 import { ref } from 'vue';
 import { RefreshCw as RefreshCwIcon, Table as TableIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate   = ref('2021-08-10');
-const toDate     = ref('2021-08-10');
+const today      = new Date().toISOString().slice(0, 10);
+const fromDate   = ref(today);
+const toDate     = ref(today);
 const billType   = ref('');
 const reportType = ref('Consolidated Day Wise');
 const generated  = ref(false);
+const loading    = ref(false);
+const error      = ref('');
+const rows       = ref([]);
+const grandTotal = ref('0.00');
 
-const rows = [
-  { date: '10-08-21', desc: 'PEPPER CHICKEN GRAVY/dry',  price: '200.00', qty: 1, value: '200.00', tax: '10.00', amount: '210.00'  },
-  { date: '10-08-21', desc: 'Milk Shakes with Ice Cream', price: '175.00', qty: 1, value: '175.00', tax: '8.75',  amount: '183.75'  },
-  { date: '10-08-21', desc: 'Lime soda sweet',            price: '60.00',  qty: 1, value: '60.00',  tax: '3.00',  amount: '63.00'   },
-  { date: '10-08-21', desc: 'Parota 1PCS',                price: '30.00',  qty: 1, value: '30.00',  tax: '1.50',  amount: '31.50'   },
-  { date: '10-08-21', desc: 'Egg Biyani',                 price: '190.00', qty: 1, value: '190.00', tax: '9.50',  amount: '199.50'  },
-  { date: '10-08-21', desc: 'chicken fried rice',         price: '190.00', qty: 1, value: '190.00', tax: '9.50',  amount: '199.50'  },
-  { date: '10-08-21', desc: 'Nattu Kozhi Briyani',        price: '230.00', qty: 2, value: '460.00', tax: '23.00', amount: '483.00'  },
-  { date: '10-08-21', desc: 'PRAWN KOTHU PAROTA',         price: '230.00', qty: 1, value: '230.00', tax: '11.50', amount: '241.50'  },
-  { date: '10-08-21', desc: 'Jeera Rice',                 price: '140.00', qty: 1, value: '140.00', tax: '7.00',  amount: '147.00'  },
-  { date: '10-08-21', desc: 'Kadai Paneer/MUSHROOM',      price: '180.00', qty: 1, value: '180.00', tax: '9.00',  amount: '189.00'  },
-  { date: '10-08-21', desc: 'Cheese Garlic Naan',         price: '100.00', qty: 1, value: '100.00', tax: '5.00',  amount: '105.00'  },
-];
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.consolidatedItems({
+      from_date:  fromDate.value,
+      to_date:    toDate.value,
+      bill_type:  billType.value || undefined,
+    });
+    rows.value       = data.data;
+    grandTotal.value = data.grandTotal;
+    generated.value  = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 </script>

@@ -20,12 +20,14 @@
           <label class="block text-xs font-medium mb-1" style="color:var(--foreground)">To Date</label>
           <input v-model="toDate" type="date" class="border rounded-lg px-3 py-1.5 text-sm outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" />
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <!-- Excel / Print -->
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
@@ -71,28 +73,27 @@
 <script setup>
 import { ref } from 'vue';
 import { RefreshCw as RefreshCwIcon, Table as TableIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate  = ref('2021-08-10');
-const toDate    = ref('2021-08-10');
+const today = new Date().toISOString().slice(0, 10);
+const fromDate  = ref(today);
+const toDate    = ref(today);
 const generated = ref(false);
+const loading   = ref(false);
+const error     = ref('');
+const reportRows = ref([]);
 
-const reportRows = [
-  { label: 'Cash Bill',          amount: '2,054.00', bills: '3' },
-  { label: 'Credit Bill',        amount: '0.00',     bills: '0' },
-  { label: 'Guest Bill',         amount: '0.00',     bills: '0' },
-  { label: 'Total Sales',        amount: '2,054.00', bills: '3', total: true },
-  { label: 'Cash',               amount: '1,129.00', bills: '1' },
-  { label: 'Card',               amount: '389.00',   bills: '1' },
-  { label: 'Other',              amount: '0.00',     bills: '0' },
-  { label: 'Total Collection',   amount: '1,516.00', bills: '2', total: true },
-  { label: 'Dine In',            amount: '925.00',   bills: '2' },
-  { label: 'Take away',          amount: '1,129.00', bills: '1' },
-  { label: 'Delivery',           amount: '0.00',     bills: '0' },
-  { label: 'Room Service',       amount: '0.00',     bills: '0' },
-  { label: 'Bar Service',        amount: '0.00',     bills: '0' },
-  { label: 'Total',              amount: '2,054.00', bills: '3', total: true },
-  { label: 'Tax Details',        amount: '',         bills: '',  total: true },
-  { label: 'GST',                amount: '97.75',    bills: '' },
-  { label: 'Total Tax Amount',   amount: '97.75',    bills: '',  total: true },
-];
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.cashier({ from_date: fromDate.value, to_date: toDate.value });
+    reportRows.value = data.data;
+    generated.value  = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 </script>

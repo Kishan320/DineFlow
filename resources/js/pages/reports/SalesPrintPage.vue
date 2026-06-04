@@ -28,12 +28,14 @@
             <option value="Credit Bill">Credit Bill</option>
           </select>
         </div>
-        <button @click="generated = true" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
-          <RefreshCwIcon :size="13" /> Generate Report
+        <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
+          <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report
         </button>
       </div>
 
-      <template v-if="generated">
+      <div v-if="error" class="px-4 py-3 text-sm text-red-500">{{ error }}</div>
+
+      <template v-if="generated && !loading">
         <div class="flex justify-end gap-2 px-4 pt-3">
           <button class="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium" style="border-color:var(--border);color:var(--foreground);background:var(--muted)">
             <PrinterIcon :size="12" /> Print
@@ -46,7 +48,6 @@
             <p class="text-xs" style="color:var(--muted-foreground)">{{ fromDate }} - {{ toDate }}</p>
           </div>
 
-          <!-- Bills grouped -->
           <div class="border rounded-lg overflow-hidden" style="border-color:var(--border)">
             <table class="w-full text-xs">
               <thead>
@@ -57,14 +58,12 @@
               </thead>
               <tbody>
                 <template v-for="bill in bills" :key="bill.salesCode">
-                  <!-- Bill header row -->
                   <tr style="background:color-mix(in srgb,var(--muted) 40%,transparent)">
                     <td class="px-3 py-1.5 font-semibold border-b border-r" style="border-color:var(--border);color:var(--foreground)">
                       {{ bill.date }} · {{ bill.salesCode }}
                     </td>
                     <td class="px-3 py-1.5 text-right font-semibold border-b" style="border-color:var(--border);color:var(--foreground)">Rs. {{ bill.amount }}</td>
                   </tr>
-                  <!-- Item rows -->
                   <tr v-for="(item, idx) in bill.items" :key="idx" class="border-b last:border-0" style="border-color:var(--border)">
                     <td class="px-3 py-1 border-r pl-6" style="border-color:var(--border);color:var(--muted-foreground)">
                       {{ item.qty }} x {{ item.desc }}
@@ -72,21 +71,19 @@
                     <td class="px-3 py-1 text-right" style="color:var(--foreground)">Rs. {{ item.amount }}</td>
                   </tr>
                 </template>
-                <!-- Total -->
                 <tr style="background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600">
                   <td class="px-3 py-2 text-right border-r border-t" style="border-color:var(--border);color:var(--foreground)">Total</td>
-                  <td class="px-3 py-2 text-right border-t" style="border-color:var(--border);color:var(--foreground)">Rs. 2,054.00</td>
+                  <td class="px-3 py-2 text-right border-t" style="border-color:var(--border);color:var(--foreground)">Rs. {{ grandTotal }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Analysis sections -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AnalysisTable title="ORDER ANALYSIS"    :rows="orderAnalysis" />
-            <AnalysisTable title="BILL TYPE ANALYSIS" :rows="billTypeAnalysis" />
-            <AnalysisTable title="PAY MODE ANALYSIS"  :rows="payModeAnalysis" />
-            <AnalysisTable title="SALES BY STAFF"     :rows="salesByStaff" />
+          <div v-if="analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnalysisTable title="ORDER ANALYSIS"     :rows="analysis.order" />
+            <AnalysisTable title="BILL TYPE ANALYSIS" :rows="analysis.bill_type" />
+            <AnalysisTable title="PAY MODE ANALYSIS"  :rows="analysis.pay_mode" />
+            <AnalysisTable title="SALES BY STAFF"     :rows="analysis.staff" />
           </div>
         </div>
       </template>
@@ -97,59 +94,34 @@
 <script setup>
 import { ref, defineComponent, h } from 'vue';
 import { RefreshCw as RefreshCwIcon, Printer as PrinterIcon } from '@lucide/vue';
+import { reportApi } from '@/services/settingsApi';
 
-const fromDate  = ref('2021-08-10');
-const toDate    = ref('2021-08-10');
+const today     = new Date().toISOString().slice(0, 10);
+const fromDate  = ref(today);
+const toDate    = ref(today);
 const billType  = ref('');
 const generated = ref(false);
+const loading   = ref(false);
+const error     = ref('');
+const bills     = ref([]);
+const analysis  = ref(null);
+const grandTotal = ref('0.00');
 
-const bills = [
-  {
-    salesCode: '210810-001', date: '10-Aug-2021', amount: '1,129.00',
-    items: [
-      { qty: 1, desc: 'PEPPER CHICKEN GRAVY/dry',    amount: '210.00' },
-      { qty: 1, desc: 'Nattu Kozhi Biryani',          amount: '241.50' },
-      { qty: 1, desc: 'Chicken Fried Rice',            amount: '199.50' },
-      { qty: 1, desc: 'Parota 1PCS',                   amount: '31.50'  },
-      { qty: 1, desc: 'Lime soda sweet',               amount: '63.00'  },
-      { qty: 1, desc: 'Milk Shakes with Ice Cream',    amount: '183.75' },
-    ],
-  },
-  {
-    salesCode: '210810-002', date: '10-Aug-2021', amount: '389.00',
-    items: [
-      { qty: 1, desc: 'Jeera Rice',         amount: '147.00' },
-      { qty: 1, desc: 'PRAWN KOTHU PAROTA', amount: '241.50' },
-    ],
-  },
-  {
-    salesCode: '210810-003', date: '10-Aug-2021', amount: '536.00',
-    items: [
-      { qty: 1, desc: 'Chicken Garlic Naan',   amount: '105.00' },
-      { qty: 1, desc: 'Kadai Paneer/MUSHROOM', amount: '189.00' },
-      { qty: 1, desc: 'Nattu Kozhi Biryani',   amount: '241.50' },
-    ],
-  },
-];
-
-const orderAnalysis    = [
-  { label: 'Completed Orders',      amount: 'Rs. 1,518.00', count: 2 },
-  { label: 'Partially Paid Orders', amount: 'Rs. 536.00',   count: 1 },
-  { label: 'Total',                 amount: 'Rs. 2,054.00', count: 3, total: true },
-];
-const billTypeAnalysis = [
-  { label: 'Cash Bill',   amount: 'Rs. 2,054.00', count: 3 },
-  { label: 'Credit Bill', amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Guest Bill',  amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Total',       amount: 'Rs. 2,054.00', count: 3, total: true },
-];
-const payModeAnalysis  = [
-  { label: 'Cash',  amount: 'Rs. 1,129.00', count: 1 },
-  { label: 'Card',  amount: 'Rs. 389.00',   count: 1 },
-  { label: 'Other', amount: 'Rs. 0.00',     count: 0 },
-  { label: 'Total', amount: 'Rs. 1,518.00', count: 2, total: true },
-];
-const salesByStaff     = [{ label: 'Selvakannan', amount: 'Rs. 2,054.00', count: 3 }];
+async function generate() {
+  loading.value = true;
+  error.value   = '';
+  try {
+    const { data } = await reportApi.salesPrint({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value || undefined });
+    bills.value      = data.bills;
+    analysis.value   = data.analysis;
+    grandTotal.value = data.grandTotal;
+    generated.value  = true;
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? 'Failed to load report.';
+  } finally {
+    loading.value = false;
+  }
+}
 
 const AnalysisTable = defineComponent({
   props: { title: String, rows: Array },
@@ -158,7 +130,7 @@ const AnalysisTable = defineComponent({
       h('div', { class: 'px-3 py-2 text-xs font-semibold text-center border-b', style: 'background:color-mix(in srgb,var(--muted) 50%,transparent);border-color:var(--border);color:var(--foreground)' }, props.title),
       h('table', { class: 'w-full text-xs' },
         h('tbody', null,
-          props.rows.map(row =>
+          (props.rows ?? []).map(row =>
             h('tr', { class: 'border-b last:border-0', style: `border-color:var(--border);${row.total ? 'background:color-mix(in srgb,var(--primary) 8%,transparent);font-weight:600' : ''}` }, [
               h('td', { class: 'px-3 py-1.5 border-r', style: 'border-color:var(--border);color:var(--foreground)' }, row.label),
               h('td', { class: 'px-3 py-1.5 text-right border-r', style: 'border-color:var(--border);color:var(--foreground)' }, row.amount),
