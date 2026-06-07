@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 
 class TableController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:tables.view')->only('index');
+        $this->middleware('permission:tables.create')->only('store');
+        $this->middleware('permission:tables.edit')->only('update');
+        $this->middleware('permission:tables.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();

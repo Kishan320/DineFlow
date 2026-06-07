@@ -9,7 +9,14 @@ use Illuminate\Http\Request;
 
 class PosSessionController extends Controller
 {
-    public function __construct(private PosService $posService) {}
+    public function __construct(private PosService $posService)
+    {
+        $this->middleware('permission:pos.session.view')->only(['active', 'show']);
+        $this->middleware('permission:pos.session.open')->only('open');
+        $this->middleware('permission:pos.session.close')->only('close');
+        $this->middleware('permission:pos.session.delete')->only('destroy');
+    }
+
 
     public function active(Request $request)
     {

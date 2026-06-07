@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class PosCustomerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:pos.customers.search')->only('search');
+        $this->middleware('permission:pos.customers.create')->only('store');
+    }
+
     public function search(Request $request)
     {
         $userId = auth()->id();

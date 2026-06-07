@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class PosTableController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:pos.access');
+    }
+
     public function index()
     {
         $userId = auth()->id();

@@ -9,7 +9,14 @@ use Illuminate\Http\Request;
 
 class PosOrderController extends Controller
 {
-    public function __construct(private PosService $posService) {}
+    public function __construct(private PosService $posService)
+    {
+        $this->middleware('permission:pos.orders.view')->only(['index', 'show', 'ongoing']);
+        $this->middleware('permission:pos.orders.create')->only('store');
+        $this->middleware('permission:pos.orders.update_status')->only('updateStatus');
+        $this->middleware('permission:pos.orders.delete')->only('destroy');
+    }
+
 
     public function index(Request $request)
     {

@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:reports.cashier')->only('cashierReport');
+        $this->middleware('permission:reports.daily_sales')->only('dailySales');
+        $this->middleware('permission:reports.detailed_sales')->only(['detailedSales', 'salesPrint']);
+        $this->middleware('permission:reports.item_wise')->only(['itemWiseSales', 'consolidatedItemWise']);
+    }
+
     private function fmt(float $val): string
     {
         return number_format($val, 2);

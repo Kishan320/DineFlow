@@ -10,21 +10,40 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // Create test user if not exists
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
+        // ── Step 1: Seed all roles and permissions ──
+        $this->call(RolesAndPermissionsSeeder::class);
+
+        // ── Step 2: Create the default Super Admin user ──
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'admin@dineflow.com'],
             [
-                'name' => 'Test User',
+                'name'     => 'Super Admin',
                 'password' => bcrypt('password'),
             ]
         );
 
-        // Run all seeders
+        // Self-referencing restaurant_id for the owner
+        if (is_null($superAdmin->restaurant_id)) {
+            $superAdmin->restaurant_id = $superAdmin->id;
+            $superAdmin->save();
+        }
+
+        $superAdmin->syncRoles(['Super Admin']);
+
+        // ── Step 3: Create a test user (legacy, kept for dev convenience) ──
+        $testUser = User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name'          => 'Test User',
+                'password'      => bcrypt('password'),
+                'restaurant_id' => $superAdmin->id,
+            ]
+        );
+        $testUser->syncRoles(['Admin']);
+
+        // ── Step 4: Seed sample data ──
         $this->call([
             CustomerSeeder::class,
             TableSeeder::class,
@@ -32,5 +51,7 @@ class DatabaseSeeder extends Seeder
             TaxSeeder::class,
             ItemSeeder::class,
         ]);
+
+        $this->command->info('✅ Database seeded. Super Admin: admin@dineflow.com / password');
     }
 }

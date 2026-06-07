@@ -10,6 +10,14 @@ use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:items.view')->only(['index', 'show']);
+        $this->middleware('permission:items.create')->only('store');
+        $this->middleware('permission:items.edit')->only('update');
+        $this->middleware('permission:items.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();

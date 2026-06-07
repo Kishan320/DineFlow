@@ -286,23 +286,23 @@
 
       <!-- Action buttons -->
       <div class="quick-row">
-        <button class="q-action" :disabled="!hasItems" @click="$emit('kot')">
+        <button v-if="can('pos.kot.create')" class="q-action" :disabled="!hasItems" @click="$emit('kot')">
           <FileTextIcon :size="13" /> KOT
         </button>
         <button class="q-action" :disabled="!hasItems" @click="$emit('bill-preview')">
           <PrinterIcon :size="13" /> Bill Preview
         </button>
-        <button class="q-action q-action--danger" :disabled="!hasItems" @click="posStore.clearCart()">
+        <button v-if="can('pos.orders.delete')" class="q-action q-action--danger" :disabled="!hasItems" @click="posStore.clearCart()">
           <XIcon :size="13" /> Cancel
         </button>
       </div>
 
-      <button class="place-btn" :disabled="!hasItems || isPlacing" @click="handlePlace">
+      <button v-if="can('pos.orders.create')" class="place-btn" :disabled="!hasItems || isPlacing" @click="handlePlace">
         <span v-if="isPlacing" class="spinner" />
         <CheckCircleIcon v-else :size="16" />
         {{ isPlacing ? 'Processing…' : 'Place Order' }}
       </button>
-      <button class="place-btn pay-btn" style="margin-top:6px" :disabled="!hasItems || isPlacing" @click="handlePlace">
+      <button v-if="can('pos.orders.create')" class="place-btn pay-btn" style="margin-top:6px" :disabled="!hasItems || isPlacing" @click="handlePlace">
         Pay Now
       </button>
 
@@ -321,6 +321,9 @@ import {
 } from '@lucide/vue';
 import { usePOSStore } from '@/stores/posStore.js';
 import { posApi } from '@/services/settingsApi.js';
+import { usePermission } from '@/composables/usePermission.js';
+
+const { can } = usePermission();
 
 const emit = defineEmits(['kot', 'bill-preview', 'place-order']);
 const posStore = usePOSStore();

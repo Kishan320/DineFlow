@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class RestaurantSettingsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:settings.view')->only('index');
+        $this->middleware('permission:settings.manage')->only(['store', 'update']);
+    }
+
     public function index()
     {
         $settings = RestaurantSettings::forUser(auth()->id())->first();

@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Item Category List</h1>
         <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Settings · Item Categories</p>
       </div>
-      <button @click="openCreate"
+      <button v-if="can('categories.create')" @click="openCreate"
         class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         style="background:var(--primary);color:var(--primary-foreground)">
         <PlusIcon :size="15" /> Add Category
@@ -104,7 +104,9 @@ import { ref, computed, onMounted, h } from 'vue';
 import { Plus as PlusIcon, Search as SearchIcon } from '@lucide/vue';
 import { AgGridVue } from 'ag-grid-vue3';
 import { ModuleRegistry, AllCommunityModule, themeQuartz } from 'ag-grid-community';
+import { usePermission } from '@/composables/usePermission.js';
 
+const { can } = usePermission();
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const gridTheme = themeQuartz.withParams({
@@ -143,35 +145,41 @@ const deletingCategory = ref(null);
 
 let searchTimer;
 
-// Action cell renderer
+// Action cell renderer — gated by categories permissions
 const ActionRenderer = {
   props: ['params'],
   setup(props) {
-    return () => h('div', { style: 'display:flex;gap:4px;align-items:center' }, [
-      h('button', {
-        title: 'Edit',
-        style: 'color:var(--primary);padding:4px;border:none;background:none;cursor:pointer',
-        onClick: () => openEdit(props.params.data),
-      }, [
-        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-          h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
-          h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
-        ]),
-      ]),
-      h('button', {
-        title: 'Delete',
-        style: 'color:var(--danger);padding:4px;border:none;background:none;cursor:pointer',
-        onClick: () => openDelete(props.params.data),
-      }, [
-        h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-          h('polyline', { points: '3 6 5 6 21 6' }),
-          h('path', { d: 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
-          h('path', { d: 'M10 11v6' }),
-          h('path', { d: 'M14 11v6' }),
-          h('path', { d: 'M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' }),
-        ]),
-      ]),
-    ]);
+    return () => {
+      const buttons = [];
+      if (can('categories.edit')) {
+        buttons.push(h('button', {
+          title: 'Edit',
+          style: 'color:var(--primary);padding:4px;border:none;background:none;cursor:pointer',
+          onClick: () => openEdit(props.params.data),
+        }, [
+          h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+            h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+            h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+          ]),
+        ]));
+      }
+      if (can('categories.delete')) {
+        buttons.push(h('button', {
+          title: 'Delete',
+          style: 'color:var(--danger);padding:4px;border:none;background:none;cursor:pointer',
+          onClick: () => openDelete(props.params.data),
+        }, [
+          h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+            h('polyline', { points: '3 6 5 6 21 6' }),
+            h('path', { d: 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
+            h('path', { d: 'M10 11v6' }),
+            h('path', { d: 'M14 11v6' }),
+            h('path', { d: 'M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' }),
+          ]),
+        ]));
+      }
+      return h('div', { style: 'display:flex;gap:4px;align-items:center' }, buttons);
+    };
   },
 };
 

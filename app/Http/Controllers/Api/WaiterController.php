@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 
 class WaiterController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:waiters.view')->only('index');
+        $this->middleware('permission:waiters.create')->only('store');
+        $this->middleware('permission:waiters.edit')->only('update');
+        $this->middleware('permission:waiters.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();

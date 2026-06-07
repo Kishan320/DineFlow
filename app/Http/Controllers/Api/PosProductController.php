@@ -10,7 +10,10 @@ use Illuminate\Http\Request;
 
 class PosProductController extends Controller
 {
-    public function __construct(private PosService $posService) {}
+    public function __construct(private PosService $posService)
+    {
+        $this->middleware('permission:pos.access')->only(['index', 'categories']);
+    }
 
     public function index(Request $request)
     {

@@ -10,7 +10,13 @@ use Illuminate\Http\Request;
 
 class PosKotController extends Controller
 {
-    public function __construct(private PosService $posService) {}
+    public function __construct(private PosService $posService)
+    {
+        $this->middleware('permission:pos.kot.view')->only(['index', 'pending']);
+        $this->middleware('permission:pos.kot.create')->only('store');
+        $this->middleware('permission:pos.kot.update_status')->only('updateStatus');
+    }
+
 
     public function store(Request $request, $orderId)
     {

@@ -13,34 +13,61 @@ use Illuminate\Validation\Rules;
 
 class AuthController extends Controller
 {
+    /**
+     * Build the user payload included in every auth response.
+     * Includes roles and permissions for the frontend permission system.
+     */
+    private function userPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'restaurant_id' => $user->restaurant_id,
+            'roles' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ];
+    }
+
+    /**
+     * Register is now restricted — use admin user-creation endpoint instead.
+     * Kept only for the very first Super Admin setup when no users exist.
+     */
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::min(8)],
         ]);
 
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
+            'name' => $request->name,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Self-reference restaurant_id for the first user (owner)
+        $user->restaurant_id = $user->id;
+        $user->save();
+
+        // Assign Super Admin role to first user
+        $user->assignRole('Waiter');
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Registration successful',
-            'token'   => $token,
-            'user'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'token' => $token,
+            'user' => $this->userPayload($user),
         ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
@@ -53,13 +80,16 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Revoke old tokens to keep sessions clean
+        $user->tokens()->delete();
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'token'   => $token,
-            'user'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'token' => $token,
+            'user' => $this->userPayload($user),
         ]);
     }
 
@@ -70,13 +100,17 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => 'Logged out successfully']);
     }
 
+    /**
+     * Returns current user with fresh roles/permissions.
+     * Called on page refresh to re-hydrate the frontend permission store.
+     */
     public function me(Request $request)
     {
         $user = $request->user();
 
         return response()->json([
             'success' => true,
-            'user'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user' => $this->userPayload($user),
         ]);
     }
 
@@ -96,8 +130,8 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email'],
+            'token' => ['required'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::min(8)],
         ]);
 
@@ -105,7 +139,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill(['password' => Hash::make($password)])
-                     ->setRememberToken(Str::random(60));
+                    ->setRememberToken(Str::random(60));
                 $user->save();
                 event(new PasswordReset($user));
             }

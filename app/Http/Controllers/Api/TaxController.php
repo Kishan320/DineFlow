@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 
 class TaxController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:taxes.view')->only(['index', 'list']);
+        $this->middleware('permission:taxes.create')->only('store');
+        $this->middleware('permission:taxes.edit')->only('update');
+        $this->middleware('permission:taxes.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();

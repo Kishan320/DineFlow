@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class PosReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:pos.reports.view');
+    }
+
     private function orderBase(): \Illuminate\Database\Eloquent\Builder
     {
         return PosOrder::forUser(auth()->id());

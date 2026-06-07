@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:categories.view')->only(['index', 'list']);
+        $this->middleware('permission:categories.create')->only('store');
+        $this->middleware('permission:categories.edit')->only('update');
+        $this->middleware('permission:categories.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();

@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:customers.view')->only('index');
+        $this->middleware('permission:customers.create')->only('store');
+        $this->middleware('permission:customers.edit')->only('update');
+        $this->middleware('permission:customers.delete')->only('destroy');
+    }
+
     public function index(Request $request)
     {
         $userId  = auth()->id();
