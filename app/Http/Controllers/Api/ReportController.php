@@ -31,25 +31,47 @@ class ReportController extends Controller
         ];
     }
 
-    private function orderBase(string $from, string $to): \Illuminate\Database\Eloquent\Builder
+    private function orderBase(Request $request, string $from, string $to): \Illuminate\Database\Eloquent\Builder
     {
-        return PosOrder::forUser(auth()->id())
+        $query = PosOrder::forUser(auth()->id())
             ->whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->whereNotIn('status', ['Cancelled']);
+            
+        if ($request->filled('bill_type') && $request->bill_type !== '- All Type -') {
+            if ($request->bill_type === 'Cash Bill') {
+                $query->where('payment_status', 'Paid');
+            } elseif ($request->bill_type === 'Credit Bill') {
+                $query->whereIn('payment_status', ['Unpaid', 'Partial']);
+            } elseif ($request->bill_type === 'Guest Bill') {
+                $query->where('order_type', 'Dine In');
+            }
+        }
+        return $query;
     }
 
-    private function orderItemBase(string $from, string $to): \Illuminate\Database\Eloquent\Builder
+    private function orderItemBase(Request $request, string $from, string $to): \Illuminate\Database\Eloquent\Builder
     {
-        return PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
+        $query = PosOrderItem::join('pos_orders', 'pos_orders.id', '=', 'pos_order_items.pos_order_id')
             ->where('pos_orders.created_by', auth()->id())
             ->whereBetween('pos_orders.created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->whereNotIn('pos_orders.status', ['Cancelled']);
+            
+        if ($request->filled('bill_type') && $request->bill_type !== '- All Type -') {
+            if ($request->bill_type === 'Cash Bill') {
+                $query->where('pos_orders.payment_status', 'Paid');
+            } elseif ($request->bill_type === 'Credit Bill') {
+                $query->whereIn('pos_orders.payment_status', ['Unpaid', 'Partial']);
+            } elseif ($request->bill_type === 'Guest Bill') {
+                $query->where('pos_orders.order_type', 'Dine In');
+            }
+        }
+        return $query;
     }
 
     public function cashierReport(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
-        $orders      = $this->orderBase($from, $to)->get();
+        $orders      = $this->orderBase($request, $from, $to)->get();
 
         $totalBills      = $orders->count();
         $totalSales      = $orders->sum('net_payable');
@@ -90,7 +112,7 @@ class ReportController extends Controller
     public function dailySales(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
-        $orders      = $this->orderBase($from, $to)->orderBy('id')->get();
+        $orders      = $this->orderBase($request, $from, $to)->orderBy('id')->get();
 
         $rows = $orders->map(fn($o, $i) => [
             'no'         => $i + 1,
@@ -98,7 +120,7 @@ class ReportController extends Controller
             'salesCode'  => $o->order_no,
             'date'       => $o->created_at->format('d-m-y'),
             'customer'   => $o->customer_name ?? 'Walk-In Customer',
-            'billType'   => 'Cash Bill',
+            'billType'   => $o->payment_status === 'Paid' ? 'Cash Bill' : 'Credit Bill',
             'billAmount' => $this->fmt($o->net_payable),
             'taxAmount'  => $this->fmt($o->tax_amount),
             'cash'       => $o->cash_amt > 0   ? $this->fmt($o->cash_amt)   : '',
@@ -122,7 +144,7 @@ class ReportController extends Controller
     public function detailedSales(Request $request)
     {
         [$from, $to] = $this->dateRange($request);
-        $orders      = $this->orderBase($from, $to)->with('items')->orderBy('id')->get();
+        $orders      = $this->orderBase($request, $from, $to)->with('items')->orderBy('id')->get();
 
         $bills = $orders->map(fn($o, $i) => [
             'no'        => $i + 1,
@@ -130,7 +152,7 @@ class ReportController extends Controller
             'billNo'    => $o->invoice_no ?? $o->order_no,
             'date'      => $o->created_at->format('d-m-y'),
             'customer'  => $o->customer_name ?? 'Walk-In Customer',
-            'billType'  => 'Cash Bill',
+            'billType'  => $o->payment_status === 'Paid' ? 'Cash Bill' : 'Credit Bill',
             'amount'    => $this->fmt($o->net_payable),
             'items'     => $o->items->map(fn($item) => [
                 'desc'   => $item->item_name,
@@ -162,8 +184,8 @@ class ReportController extends Controller
                 ['label' => 'Total',                 'amount' => 'Rs. ' . $this->fmt($totalSales), 'count' => $orders->count(), 'total' => true],
             ],
             'bill_type' => [
-                ['label' => 'Cash Bill',   'amount' => 'Rs. ' . $this->fmt($totalSales), 'count' => $orders->count()],
-                ['label' => 'Credit Bill', 'amount' => 'Rs. 0.00', 'count' => 0],
+                ['label' => 'Cash Bill',   'amount' => 'Rs. ' . $this->fmt($orders->where('payment_status', 'Paid')->sum('net_payable')), 'count' => $orders->where('payment_status', 'Paid')->count()],
+                ['label' => 'Credit Bill', 'amount' => 'Rs. ' . $this->fmt($orders->whereIn('payment_status', ['Unpaid', 'Partial'])->sum('net_payable')), 'count' => $orders->whereIn('payment_status', ['Unpaid', 'Partial'])->count()],
                 ['label' => 'Guest Bill',  'amount' => 'Rs. 0.00', 'count' => 0],
                 ['label' => 'Total',       'amount' => 'Rs. ' . $this->fmt($totalSales), 'count' => $orders->count(), 'total' => true],
             ],
@@ -201,13 +223,13 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->dateRange($request);
 
-        $itemNames = $this->orderItemBase($from, $to)
+        $itemNames = $this->orderItemBase($request, $from, $to)
             ->distinct()
             ->orderBy('pos_order_items.item_name')
             ->pluck('pos_order_items.item_name')
             ->toArray();
 
-        $query = $this->orderItemBase($from, $to)
+        $query = $this->orderItemBase($request, $from, $to)
             ->when($request->item_name, fn($q) => $q->where('pos_order_items.item_name', $request->item_name))
             ->orderBy('pos_orders.id')
             ->select(
@@ -248,7 +270,7 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->dateRange($request);
 
-        $rows = $this->orderItemBase($from, $to)
+        $rows = $this->orderItemBase($request, $from, $to)
             ->select(
                 DB::raw('DATE(pos_orders.created_at) as sale_date'),
                 'pos_order_items.item_name as desc',
@@ -274,7 +296,7 @@ class ReportController extends Controller
             ]);
 
         $grandTotal = $this->fmt(
-            $this->orderItemBase($from, $to)
+            $this->orderItemBase($request, $from, $to)
                 ->sum(DB::raw('pos_order_items.line_total + pos_order_items.tax_amount'))
         );
 

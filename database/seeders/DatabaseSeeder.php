@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
         $testUser->syncRoles(['Admin']);
 
         // ── Step 4: Seed sample data ──
-        // Removed non-existent seeders
+        $this->call(DummyDataSeeder::class);
 
         $this->command->info('✅ Database seeded. Super Admin: admin@dineflow.com / password');
     }
