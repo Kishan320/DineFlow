@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $superAdmin = User::firstOrCreate(
             ['email' => 'admin@dineflow.com'],
             [
-                'name'     => 'Super Admin',
+                'name' => 'Super Admin',
                 'password' => bcrypt('password'),
             ]
         );
@@ -36,21 +36,15 @@ class DatabaseSeeder extends Seeder
         $testUser = User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
-                'name'          => 'Test User',
-                'password'      => bcrypt('password'),
+                'name' => 'Test User',
+                'password' => bcrypt('password'),
                 'restaurant_id' => $superAdmin->id,
             ]
         );
         $testUser->syncRoles(['Admin']);
 
         // ── Step 4: Seed sample data ──
-        $this->call([
-            CustomerSeeder::class,
-            TableSeeder::class,
-            WaiterSeeder::class,
-            TaxSeeder::class,
-            ItemSeeder::class,
-        ]);
+        // Removed non-existent seeders
 
         $this->command->info('✅ Database seeded. Super Admin: admin@dineflow.com / password');
     }

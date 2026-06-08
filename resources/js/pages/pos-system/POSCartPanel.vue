@@ -9,7 +9,7 @@
             <UserIcon :size="14" />
             <span class="section-title">Customer</span>
           </div>
-          <button class="link-btn" @click="showPicker = !showPicker">Change</button>
+          <button class="link-btn" @click="togglePicker">Change</button>
         </div>
 
         <!-- Customer picker -->
@@ -39,10 +39,6 @@
               </div>
             </button>
           </div>
-          <!-- Create customer inline -->
-          <button class="create-cust-btn" @click="showCreateCustomer = true">
-            <PlusIcon :size="12" /> New Customer
-          </button>
         </div>
 
         <!-- Selected customer card -->
@@ -61,7 +57,7 @@
         <p class="section-title" style="margin-bottom:8px">New Customer</p>
         <div class="field" style="margin-bottom:6px">
           <label class="field-lbl">NAME *</label>
-          <input v-model="newCust.name" class="field-inp" placeholder="Customer name" />
+          <input v-model="newCust.company_name" class="field-inp" placeholder="Customer name" />
         </div>
         <div class="two-col" style="margin-bottom:6px">
           <div class="field">
@@ -74,7 +70,7 @@
           </div>
         </div>
         <div class="two-col">
-          <button class="q-action" @click="createCustomer" :disabled="!newCust.name || creatingCust">
+          <button class="q-action" @click="createCustomer" :disabled="!newCust.company_name || creatingCust">
             {{ creatingCust ? 'Saving...' : 'Save' }}
           </button>
           <button class="q-action" @click="showCreateCustomer = false; newCust = {}">Cancel</button>
@@ -339,6 +335,13 @@ const newCust           = ref({});
 
 const hasItems = computed(() => posStore.cartItems.length > 0);
 
+function togglePicker() {
+  showPicker.value = !showPicker.value;
+  if (showPicker.value && customerResults.value.length <= 1) {
+    onCustSearch();
+  }
+}
+
 let custTimer = null;
 function onCustSearch() {
   clearTimeout(custTimer);
@@ -361,7 +364,7 @@ function selectCustomer(c) {
 }
 
 async function createCustomer() {
-  if (!newCust.value.name) return;
+  if (!newCust.value.company_name) return;
   creatingCust.value = true;
   try {
     const res = await posApi.createCustomer(newCust.value);

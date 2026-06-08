@@ -29,7 +29,6 @@ class PosCustomerController extends Controller
                   ->orWhere('code', 'like', "%{$search}%");
             }))
             ->orderBy('company_name')
-            ->limit(20)
             ->get()
             ->map(fn($c) => [
                 'id'      => $c->id,

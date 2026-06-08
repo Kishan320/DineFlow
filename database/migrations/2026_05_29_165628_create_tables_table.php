@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->string('table_name');
             $table->string('description')->nullable();
             $table->unsignedInteger('max_seats')->default(1);
+            $table->enum('status', ['Available', 'Occupied'])->default('Available');
             $table->string('last_accessed_by')->default('Administrator');
             $table->timestamps();
             $table->unique(['created_by', 'table_name']);
