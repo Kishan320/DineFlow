@@ -28,6 +28,14 @@
 <script setup>
 import { ShoppingBag, DollarSign, Grid3X3, Users, TrendingUp, Clock } from '@lucide/vue';
 
+const props = defineProps({
+  kpiData: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
+});
+
 function changeClass(type) {
   if (type === 'positive') return 'text-success bg-success/10';
   if (type === 'negative') return 'text-danger bg-danger/10';
@@ -35,13 +43,4 @@ function changeClass(type) {
   if (type === 'alert') return 'text-danger bg-danger/10';
   return '';
 }
-
-const kpiData = [
-  { id: 'kpi-orders', label: "Today's Orders", value: '124', change: '+12%', changeType: 'positive', subtext: 'vs yesterday 111', icon: ShoppingBag, color: 'text-primary', bg: 'bg-accent', hero: true },
-  { id: 'kpi-revenue', label: "Today's Revenue", value: '$3,847', change: '+8.4%', changeType: 'positive', subtext: 'vs yesterday $3,549', icon: DollarSign, color: 'text-secondary', bg: 'bg-secondary/10', hero: true },
-  { id: 'kpi-tables', label: 'Active Tables', value: '4 / 10', change: '40%', changeType: 'neutral', subtext: '4 occupied, 4 available', icon: Grid3X3, color: 'text-info', bg: 'bg-info/10' },
-  { id: 'kpi-customers', label: 'Customers Today', value: '89', change: '+5', changeType: 'positive', subtext: 'since last hour', icon: Users, color: 'text-secondary', bg: 'bg-secondary/10' },
-  { id: 'kpi-aov', label: 'Avg Order Value', value: '$31.02', change: '-2.1%', changeType: 'negative', subtext: 'vs $31.68 yesterday', icon: TrendingUp, color: 'text-warning', bg: 'bg-warning/10' },
-  { id: 'kpi-pending', label: 'Pending Bills', value: '3', change: 'Action needed', changeType: 'alert', subtext: '$103.73 outstanding', icon: Clock, color: 'text-danger', bg: 'bg-danger/10' },
-];
 </script>

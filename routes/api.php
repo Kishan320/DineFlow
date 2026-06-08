@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\PosReportController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DashboardController;
 
 // ── Guest routes (no auth required) ──────────────────────────────────────────
 // Register is restricted to first-user-only (handled in controller)
@@ -33,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
+
+    // ── Dashboard ────────────────────────────────────────────────────────────
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // ── Settings — Categories ────────────────────────────────────────────────
     Route::get('categories/list', [CategoryController::class, 'list']);

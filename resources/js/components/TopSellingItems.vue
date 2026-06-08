@@ -8,7 +8,8 @@
       <TrendingUpIcon :size="16" style="color:var(--primary)" />
     </div>
     <div class="space-y-4">
-      <div v-for="(item, index) in topSellingItems" :key="item.id" class="flex items-center gap-3">
+      <div v-if="items.length === 0" class="text-sm text-center py-4" style="color:var(--muted-foreground)">No sales data yet today.</div>
+      <div v-for="(item, index) in items" :key="item.id" class="flex items-center gap-3">
         <span class="text-xs font-bold w-4 flex-shrink-0" style="color:var(--muted-foreground)">{{ index + 1 }}</span>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between mb-1">
@@ -37,7 +38,17 @@
 <script setup>
 import { computed } from 'vue';
 import { TrendingUp as TrendingUpIcon } from '@lucide/vue';
-import { topSellingItems } from '@/utils/mockData.js';
 
-const maxQty = computed(() => Math.max(...topSellingItems.map(i => i.quantity)));
+const props = defineProps({
+  items: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
+});
+
+const maxQty = computed(() => {
+  if (!props.items || props.items.length === 0) return 1;
+  return Math.max(...props.items.map(i => i.quantity));
+});
 </script>

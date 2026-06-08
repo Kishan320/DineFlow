@@ -14,25 +14,62 @@
       </div>
     </div>
 
-    <!-- KPI Cards -->
-    <DashboardKPIs />
-
-    <!-- Charts Row -->
-    <DashboardCharts />
-
-    <!-- Bottom Row -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      <TopSellingItems />
-      <div class="xl:col-span-2">
-        <RecentOrdersTable />
-      </div>
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
+
+    <template v-else>
+      <!-- KPI Cards -->
+      <DashboardKPIs :kpi-data="dashboardData.kpis" />
+
+      <!-- Charts Row -->
+      <DashboardCharts 
+        :hourly-sales="dashboardData.hourlySales" 
+        :weekly-sales="dashboardData.weeklySales" 
+      />
+
+      <!-- Bottom Row -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <TopSellingItems :items="dashboardData.topSellingItems" />
+        <div class="xl:col-span-2">
+          <RecentOrdersTable :orders="dashboardData.recentOrders" />
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
+import api from '@/services/axiosInstance.js';
 import DashboardKPIs from '@/components/DashboardKPIs.vue';
 import DashboardCharts from '@/components/DashboardCharts.vue';
 import TopSellingItems from '@/components/TopSellingItems.vue';
 import RecentOrdersTable from '@/components/RecentOrdersTable.vue';
+
+const isLoading = ref(true);
+const dashboardData = ref({
+  kpis: [],
+  hourlySales: [],
+  weeklySales: [],
+  topSellingItems: [],
+  recentOrders: []
+});
+
+const fetchDashboardData = async () => {
+  try {
+    isLoading.value = true;
+    const response = await api.get('/dashboard');
+    dashboardData.value = response;
+  } catch (error) {
+    console.error('Failed to fetch dashboard data:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchDashboardData();
+});
 </script>

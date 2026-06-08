@@ -5,16 +5,23 @@
 <script setup>
 import { computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
-import { hourlySalesData } from '@/utils/mockData.js';
+
+const props = defineProps({
+  data: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
+});
 
 const apexchart = VueApexCharts;
 
-const series = [
-  { name: 'revenue', data: hourlySalesData.map(d => d.revenue) },
-  { name: 'orders', data: hourlySalesData.map(d => d.orders) },
-];
+const series = computed(() => [
+  { name: 'revenue', data: props.data.map(d => d.revenue) },
+  { name: 'orders', data: props.data.map(d => d.orders) },
+]);
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   chart: { toolbar: { show: false }, zoom: { enabled: false }, background: 'transparent' },
   dataLabels: { enabled: false },
   stroke: { curve: 'smooth', width: 2 },
@@ -29,7 +36,7 @@ const chartOptions = {
   },
   colors: ['#E85D26', '#2D6A4F'],
   xaxis: {
-    categories: hourlySalesData.map(d => d.hour),
+    categories: props.data.map(d => d.hour),
     axisBorder: { show: false },
     axisTicks: { show: false },
     labels: { style: { colors: '#78716C', fontSize: '11px' } },
@@ -47,5 +54,5 @@ const chartOptions = {
     style: { fontSize: '12px' },
   },
   legend: { position: 'bottom', fontSize: '12px' },
-};
+}));
 </script>

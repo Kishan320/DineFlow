@@ -3,16 +3,27 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
-import { weeklySalesData } from '@/utils/mockData.js';
+
+const props = defineProps({
+  data: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
+});
 
 const apexchart = VueApexCharts;
 
-const maxVal = Math.max(...weeklySalesData.map(d => d.revenue));
+const maxVal = computed(() => {
+  if (!props.data || props.data.length === 0) return 0;
+  return Math.max(...props.data.map(d => d.revenue));
+});
 
-const series = [{ name: 'Revenue', data: weeklySalesData.map(d => d.revenue) }];
+const series = computed(() => [{ name: 'Revenue', data: props.data.map(d => d.revenue) }]);
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   chart: { toolbar: { show: false }, background: 'transparent' },
   plotOptions: {
     bar: {
@@ -21,11 +32,11 @@ const chartOptions = {
       distributed: true,
     },
   },
-  colors: weeklySalesData.map(d => d.revenue === maxVal ? '#E85D26' : '#E8E5E0'),
+  colors: props.data.map(d => d.revenue === maxVal.value ? '#E85D26' : '#E8E5E0'),
   dataLabels: { enabled: false },
   legend: { show: false },
   xaxis: {
-    categories: weeklySalesData.map(d => d.day),
+    categories: props.data.map(d => d.day),
     axisBorder: { show: false },
     axisTicks: { show: false },
     labels: { style: { colors: '#78716C', fontSize: '11px' } },
@@ -42,5 +53,5 @@ const chartOptions = {
     theme: 'light',
     y: { formatter: (val) => `$${val.toLocaleString()}` },
   },
-};
+}));
 </script>

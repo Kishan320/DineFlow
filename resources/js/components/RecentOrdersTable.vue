@@ -16,8 +16,11 @@
           </tr>
         </thead>
         <tbody>
+          <tr v-if="orders.length === 0">
+            <td colspan="8" class="text-center py-4 text-sm" style="color:var(--muted-foreground)">No orders today.</td>
+          </tr>
           <tr
-            v-for="(order, idx) in recentOrders.slice(0, 8)"
+            v-for="(order, idx) in orders.slice(0, 8)"
             :key="order.id"
             :class="['border-b last:border-0 hover:bg-muted/40 transition-colors group', idx % 2 !== 0 ? 'bg-muted/20' : '']"
             style="border-color:var(--border)"
@@ -49,13 +52,20 @@
 import { RouterLink } from 'vue-router';
 import { Eye as EyeIcon, Printer as PrinterIcon, MoreHorizontal as MoreHorizontalIcon } from '@lucide/vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { recentOrders } from '@/utils/mockData.js';
+
+const props = defineProps({
+  orders: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
+});
 
 const columns = ['Bill No', 'Customer', 'Table', 'Type', 'Total', 'Status', 'Time'];
 
 function billTypeClass(type) {
-  if (type === 'Dine In') return 'bg-info/10 text-info';
-  if (type === 'Takeaway') return 'bg-accent text-primary';
+  if (type === 'Dine In' || type === 'dine_in') return 'bg-info/10 text-info';
+  if (type === 'Takeaway' || type === 'takeaway') return 'bg-accent text-primary';
   return 'bg-secondary/10 text-secondary';
 }
 </script>
