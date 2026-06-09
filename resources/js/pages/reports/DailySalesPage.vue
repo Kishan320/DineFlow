@@ -124,8 +124,7 @@ async function generate() {
   error.value   = '';
   try {
     const { data } = await reportApi.dailySales({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value || undefined });
-    rows.value    = data.data;
-    totals.value  = data.totals;
+    rows.value    = data;
     generated.value = true;
   } catch (e) {
     error.value = e?.response?.data?.message ?? 'Failed to load report.';

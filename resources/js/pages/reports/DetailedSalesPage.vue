@@ -133,10 +133,10 @@ async function generate() {
   loading.value = true;
   error.value   = '';
   try {
-    const { data } = await reportApi.detailedSales({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value || undefined });
-    bills.value      = data.bills;
-    analysis.value   = data.analysis;
-    grandTotal.value = data.grandTotal;
+    const response = await reportApi.detailedSales({ from_date: fromDate.value, to_date: toDate.value, bill_type: billType.value });
+    bills.value      = response.bills;
+    analysis.value   = response.analysis;
+    grandTotal.value = response.grandTotal;
     generated.value  = true;
   } catch (e) {
     error.value = e?.response?.data?.message ?? 'Failed to load report.';

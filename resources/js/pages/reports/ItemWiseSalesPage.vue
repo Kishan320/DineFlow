@@ -110,14 +110,14 @@ async function generate() {
   loading.value = true;
   error.value   = '';
   try {
-    const { data } = await reportApi.itemWise({
+    const response = await reportApi.itemWise({
       from_date:  fromDate.value,
       to_date:    toDate.value,
       item_name:  selectedItem.value || undefined,
     });
-    rows.value        = data.data;
-    totals.value      = data.totals;
-    itemOptions.value = data.itemNames ?? itemOptions.value;
+    rows.value        = response.data;
+    totals.value      = response.totals;
+    itemOptions.value = response.itemNames ?? itemOptions.value;
     generated.value   = true;
   } catch (e) {
     error.value = e?.response?.data?.message ?? 'Failed to load report.';

@@ -88,7 +88,7 @@ async function generate() {
   error.value   = '';
   try {
     const { data } = await reportApi.cashier({ from_date: fromDate.value, to_date: toDate.value });
-    reportRows.value = data.data;
+    reportRows.value = data;
     generated.value  = true;
   } catch (e) {
     error.value = e?.response?.data?.message ?? 'Failed to load report.';
