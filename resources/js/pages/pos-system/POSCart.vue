@@ -36,9 +36,7 @@
           <UserIcon :size="11" /> Customer
         </label>
         <div class="select-wrap">
-          <select v-model="posStore.customerId" class="field-select">
-            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <Select filter v-model="posStore.customerId" class="field-select" :options="customers" optionLabel="name" optionValue="id" />
           <ChevronDownIcon :size="13" class="select-arrow" />
         </div>
       </div>
@@ -48,20 +46,30 @@
         <div class="field-group">
           <label class="field-label"><TableIcon :size="11" /> Table</label>
           <div class="select-wrap">
-            <select v-model="posStore.tableId" class="field-select">
-              <option value="">Select</option>
-              <option v-for="t in availableTables" :key="t.id" :value="t.id">Table {{ t.number }}</option>
-            </select>
+            <Select filter v-model="posStore.tableId" class="field-select" :options="availableTables" optionLabel="number" optionValue="id" placeholder="Select">
+              <template #value="slotProps">
+                <span v-if="slotProps.value">Table {{ availableTables.find(t => t.id === slotProps.value)?.number }}</span>
+                <span v-else>{{ slotProps.placeholder }}</span>
+              </template>
+              <template #option="slotProps">
+                <span>Table {{ slotProps.option.number }}</span>
+              </template>
+            </Select>
             <ChevronDownIcon :size="12" class="select-arrow" />
           </div>
         </div>
         <div class="field-group">
           <label class="field-label"><UserCheckIcon :size="11" /> Waiter</label>
           <div class="select-wrap">
-            <select v-model="posStore.waiterId" class="field-select">
-              <option value="">Select</option>
-              <option v-for="w in availableWaiters" :key="w.id" :value="w.id">{{ w.name.split(' ')[0] }}</option>
-            </select>
+            <Select filter v-model="posStore.waiterId" class="field-select" :options="availableWaiters" optionLabel="name" optionValue="id" placeholder="Select">
+              <template #value="slotProps">
+                <span v-if="slotProps.value">{{ availableWaiters.find(w => w.id === slotProps.value)?.name.split(' ')[0] }}</span>
+                <span v-else>{{ slotProps.placeholder }}</span>
+              </template>
+              <template #option="slotProps">
+                <span>{{ slotProps.option.name.split(' ')[0] }}</span>
+              </template>
+            </Select>
             <ChevronDownIcon :size="12" class="select-arrow" />
           </div>
         </div>

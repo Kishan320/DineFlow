@@ -42,10 +42,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-5">
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Category</label>
-            <select v-model="form.category" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
-              <option value="">Select an option</option>
-              <option v-for="c in categoryOptions" :key="c.id" :value="c.category_name">{{ c.category_name }}</option>
-            </select>
+            <Select filter v-model="form.category" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" :options="categoryOptions" optionLabel="category_name" optionValue="category_name" placeholder="Select a Category" />
           </div>
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Restaurant Sales Price <span style="color:var(--danger)">*</span></label>
@@ -65,17 +62,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Tax Type <span style="color:var(--danger)">*</span></label>
-            <select v-model="form.tax_type" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
-              <option value="Exclusive">Exclusive</option>
-              <option value="Inclusive">Inclusive</option>
-            </select>
+            <Select filter v-model="form.tax_type" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" :options="[{label: 'Exclusive', value: 'Exclusive'}, {label: 'Inclusive', value: 'Inclusive'}]" optionLabel="label" optionValue="value" />
           </div>
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Tax <span style="color:var(--danger)">*</span></label>
-            <select v-model="form.tax" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
-              <option value="">Select an option</option>
-              <option v-for="t in taxOptions" :key="t.id" :value="t.description">{{ t.description }} ({{ t.tax_percent }}%)</option>
-            </select>
+            <Select filter v-model="form.tax" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" :options="taxOptions" optionLabel="description" optionValue="description" placeholder="Select a Tax" />
           </div>
         </div>
 
@@ -83,18 +74,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Item State <span style="color:var(--danger)">*</span></label>
-            <select v-model="form.state" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
-              <option value="On Sale">On Sale</option>
-              <option value="Off Sale">Off Sale</option>
-            </select>
+            <Select filter v-model="form.state" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" :options="[{label: 'On Sale', value: 'On Sale'}, {label: 'Off Sale', value: 'Off Sale'}]" optionLabel="label" optionValue="value" />
           </div>
           <div>
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Item Type <span style="color:var(--danger)">*</span></label>
-            <select v-model="form.item_type" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)">
-              <option value="Physical Item">Physical Item</option>
-              <option value="Digital Item">Digital Item</option>
-              <option value="Service">Service</option>
-            </select>
+            <Select filter v-model="form.item_type" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" :options="[{label: 'Physical Item', value: 'Physical Item'}, {label: 'Digital Item', value: 'Digital Item'}, {label: 'Service', value: 'Service'}]" optionLabel="label" optionValue="value" />
           </div>
         </div>
 

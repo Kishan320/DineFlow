@@ -85,19 +85,14 @@
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--lp-muted-fg)">Time</label>
-                <select v-model="form.time" :class="['lp-input', errors.time ? 'lp-error' : '']">
-                  <option value="">Select time</option>
-                  <option v-for="t in timeSlots" :key="t" :value="t">{{ t }}</option>
-                </select>
+                <Select filter v-model="form.time" :options="timeSlots" placeholder="Select time" :class="['lp-input', errors.time ? 'lp-error' : '']" />
                 <p v-if="errors.time" class="text-xs text-red-500 mt-1">{{ errors.time }}</p>
               </div>
             </div>
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--lp-muted-fg)">Occasion</label>
-              <select v-model="form.occasion" class="lp-input">
-                <option v-for="o in occasions" :key="o" :value="o">{{ o }}</option>
-              </select>
+              <Select filter v-model="form.occasion" :options="occasions" class="lp-input" />
             </div>
 
             <div>

@@ -95,27 +95,30 @@
             <div class="field">
               <label class="field-lbl">TABLE</label>
               <div class="sel-wrap">
-                <select v-model="posStore.tableId" class="field-sel">
-                  <option :value="null">Select table</option>
-                  <option
-                    v-for="tb in posStore.tables"
-                    :key="tb.id"
-                    :value="tb.id"
-                    :disabled="tb.status === 'Occupied'"
-                  >
-                    {{ tb.table_name }}{{ tb.status === 'Occupied' ? ' (Occupied)' : '' }}
-                  </option>
-                </select>
+                <Select filter v-model="posStore.tableId" class="field-sel" :options="posStore.tables" optionLabel="table_name" optionValue="id" placeholder="Select table">
+                  <template #value="slotProps">
+                    <span v-if="slotProps.value">{{ posStore.tables?.find(t => t.id === slotProps.value)?.table_name }}{{ posStore.tables?.find(t => t.id === slotProps.value)?.status === 'Occupied' ? ' (Occupied)' : '' }}</span>
+                    <span v-else>{{ slotProps.placeholder }}</span>
+                  </template>
+                  <template #option="slotProps">
+                    <span>{{ slotProps.option.table_name }}{{ slotProps.option.status === 'Occupied' ? ' (Occupied)' : '' }}</span>
+                  </template>
+                </Select>
                 <ChevronDownIcon :size="12" class="sel-arr" />
               </div>
             </div>
             <div class="field">
               <label class="field-lbl">WAITER</label>
               <div class="sel-wrap">
-                <select v-model="posStore.waiterId" class="field-sel">
-                  <option :value="null">Select waiter</option>
-                  <option v-for="w in posStore.waiters" :key="w.id" :value="w.id">{{ w.name }}</option>
-                </select>
+                <Select filter v-model="posStore.waiterId" class="field-sel" :options="posStore.waiters" optionLabel="name" optionValue="id" placeholder="Select waiter">
+                  <template #value="slotProps">
+                    <span v-if="slotProps.value">{{ posStore.waiters.find(w => w.id === slotProps.value)?.name }}</span>
+                    <span v-else>{{ slotProps.placeholder }}</span>
+                  </template>
+                  <template #option="slotProps">
+                    <span>{{ slotProps.option.name }}</span>
+                  </template>
+                </Select>
                 <ChevronDownIcon :size="12" class="sel-arr" />
               </div>
             </div>
@@ -196,10 +199,7 @@
           <div class="field">
             <label class="field-lbl">TYPE</label>
             <div class="sel-wrap">
-              <select v-model="posStore.discountType" class="field-sel">
-                <option value="flat">Flat ($)</option>
-                <option value="percent">Percent (%)</option>
-              </select>
+              <Select filter v-model="posStore.discountType" class="field-sel" :options="[{label: 'Flat ($)', value: 'flat'}, {label: 'Percent (%)', value: 'percent'}]" optionLabel="label" optionValue="value" />
               <ChevronDownIcon :size="12" class="sel-arr" />
             </div>
           </div>
@@ -215,13 +215,7 @@
         <div class="field">
           <label class="field-lbl">BILL TYPE</label>
           <div class="sel-wrap">
-            <select v-model="posStore.billPayType" class="field-sel">
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="UPI">UPI</option>
-              <option value="Split">Split</option>
-              <option value="Others">Others</option>
-            </select>
+            <Select filter v-model="posStore.billPayType" class="field-sel" :options="[{label: 'Cash', value: 'Cash'}, {label: 'Card', value: 'Card'}, {label: 'UPI', value: 'UPI'}, {label: 'Split', value: 'Split'}, {label: 'Others', value: 'Others'}]" optionLabel="label" optionValue="value" />
             <ChevronDownIcon :size="12" class="sel-arr" />
           </div>
         </div>

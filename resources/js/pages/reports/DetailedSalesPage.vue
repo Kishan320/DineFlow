@@ -22,18 +22,11 @@
         </div>
         <div>
           <label class="block text-xs font-medium mb-1" style="color:var(--foreground)">Bill Type</label>
-          <select v-model="billType" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[140px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-            <option value="">– All Type –</option>
-            <option value="Cash Bill">Cash Bill</option>
-            <option value="Credit Bill">Credit Bill</option>
-          </select>
+          <Select filter v-model="billType" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[140px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" :options="[{label: 'Cash Bill', value: 'Cash Bill'}, {label: 'Credit Bill', value: 'Credit Bill'}]" optionLabel="label" optionValue="value" placeholder="– All Type –" />
         </div>
         <div>
           <label class="block text-xs font-medium mb-1" style="color:var(--foreground)">Report Type</label>
-          <select v-model="reportType" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[160px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-            <option value="Detailed Sales">Detailed Sales</option>
-            <option value="Consolidated Day Wise">Consolidated Day Wise</option>
-          </select>
+          <Select filter v-model="reportType" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[160px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" :options="[{label: 'Detailed Sales', value: 'Detailed Sales'}, {label: 'Consolidated Day Wise', value: 'Consolidated Day Wise'}]" optionLabel="label" optionValue="value" />
         </div>
         <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
           <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report

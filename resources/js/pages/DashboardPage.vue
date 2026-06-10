@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold" style="color:var(--foreground)">Dashboard</h1>
-        <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">Tuesday, May 27, 2026 · Lunch service in progress</p>
+        <p class="text-sm mt-0.5" style="color:var(--muted-foreground)">{{ currentDateString }}</p>
       </div>
       <div class="flex items-center gap-2">
         <span class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full" style="color:var(--success);background:color-mix(in srgb, var(--success) 10%, transparent)">
@@ -48,6 +48,23 @@ import DashboardCharts from '@/components/DashboardCharts.vue';
 import TopSellingItems from '@/components/TopSellingItems.vue';
 import RecentOrdersTable from '@/components/RecentOrdersTable.vue';
 
+const currentDateString = ref('');
+
+const updateDateString = () => {
+  const now = new Date();
+  const dateStr = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'
+  }).format(now);
+  
+  const hour = now.getHours();
+  let period = 'Night service';
+  if (hour >= 6 && hour < 11) period = 'Breakfast service';
+  else if (hour >= 11 && hour < 16) period = 'Lunch service';
+  else if (hour >= 16 && hour < 23) period = 'Dinner service';
+  
+  currentDateString.value = `${dateStr} · ${period} in progress`;
+};
+
 const isLoading = ref(true);
 const dashboardData = ref({
   kpis: [],
@@ -70,6 +87,7 @@ const fetchDashboardData = async () => {
 };
 
 onMounted(() => {
+  updateDateString();
   fetchDashboardData();
 });
 </script>

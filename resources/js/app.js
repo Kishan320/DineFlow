@@ -11,7 +11,18 @@ import Toast, { POSITION } from 'vue-toastification';
 import router from './router/index.js';
 import App from './App.vue';
 
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+import Select from 'primevue/select';
+
 const app = createApp(App);
+
+app.use(PrimeVue, {
+    theme: {
+        preset: Aura
+    }
+});
+app.component('Select', Select);
 
 app.use(createPinia());
 app.use(router);

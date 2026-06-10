@@ -1969,3 +1969,18 @@ table#categories-table.dataTable.no-footer {
 .dark .lp-input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7) opacity(0.6);
 }
+
+/* Fix PrimeVue Select custom styling */
+.p-select {
+  align-items: center;
+}
+.p-select .p-select-label {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.sel-wrap .p-select-dropdown,
+.select-wrap .p-select-dropdown {
+  display: none !important;
+}

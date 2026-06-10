@@ -18,15 +18,12 @@
           <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
             Business Management Unit <span style="color:var(--danger)">*</span>
           </label>
-          <select
+          <Select filter
             v-model="form.businessUnit"
             :disabled="loading"
             class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
             style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
-          >
-            <option value="Dak Trading India Opc Private Limited">Dak Trading India Opc Private Limited</option>
-            <option value="Ayyan Multi Cuisine Restaurant">Ayyan Multi Cuisine Restaurant</option>
-          </select>
+           :options="[{label: 'Dak Trading India Opc Private Limited', value: 'Dak Trading India Opc Private Limited'}, {label: 'Ayyan Multi Cuisine Restaurant', value: 'Ayyan Multi Cuisine Restaurant'}]" optionLabel="label" optionValue="value" />
         </div>
 
         <!-- Row: Restaurant Name + GST No -->
@@ -75,15 +72,12 @@
             <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
               Guest Bill <span style="color:var(--danger)">*</span>
             </label>
-            <select
+            <Select filter
               v-model="form.guestBill"
               :disabled="loading"
               class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
               style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
-            >
-              <option value="Disabled">Disabled</option>
-              <option value="Enabled">Enabled</option>
-            </select>
+             :options="[{label: 'Disabled', value: 'Disabled'}, {label: 'Enabled', value: 'Enabled'}]" optionLabel="label" optionValue="value" />
           </div>
         </div>
 

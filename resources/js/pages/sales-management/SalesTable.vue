@@ -152,9 +152,7 @@
           <span>Showing {{ meta.total === 0 ? 0 : (meta.current_page - 1) * meta.per_page + 1 }}–{{ Math.min(meta.current_page * meta.per_page, meta.total) }} of {{ meta.total }} records</span>
           <div class="flex items-center gap-1.5">
             <span>Rows per page:</span>
-            <select v-model.number="pageSize" @change="onFilterChange" class="border rounded-lg px-2 py-1 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-              <option v-for="n in [10, 25, 50]" :key="n" :value="n">{{ n }}</option>
-            </select>
+            <Select filter v-model.number="pageSize" @change="onFilterChange" class="border rounded-lg px-2 py-1 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" :options="[{label: '{{ n }}', value: '{{ n }}'}]" optionLabel="label" optionValue="value" />
           </div>
         </div>
         <div class="flex items-center gap-1">

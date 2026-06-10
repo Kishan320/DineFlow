@@ -22,10 +22,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium mb-1" style="color:var(--foreground)">Item Name</label>
-          <select v-model="selectedItem" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[200px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-            <option value="">– All Items –</option>
-            <option v-for="item in itemOptions" :key="item" :value="item">{{ item }}</option>
-          </select>
+          <Select filter v-model="selectedItem" class="border rounded-lg px-3 py-1.5 text-sm outline-none min-w-[200px]" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" :options="[{label: '{{ item }}', value: '{{ item }}'}]" optionLabel="label" optionValue="value" placeholder="– All Items –" />
         </div>
         <button @click="generate" :disabled="loading" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium" style="background:var(--primary);color:var(--primary-foreground)">
           <RefreshCwIcon :size="13" :class="loading ? 'animate-spin' : ''" /> Generate Report

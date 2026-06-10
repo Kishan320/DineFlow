@@ -6,7 +6,7 @@
           <h2 class="text-base font-semibold" style="color:var(--foreground)">Hourly Sales Today</h2>
           <p class="text-xs mt-0.5" style="color:var(--muted-foreground)">Order volume and revenue by hour</p>
         </div>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-lg" style="color:var(--muted-foreground);background:var(--muted)">May 27, 2026</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-lg" style="color:var(--muted-foreground);background:var(--muted)">{{ todayDate }}</span>
       </div>
       <HourlySalesChart :data="hourlySales" />
     </div>
@@ -38,4 +38,8 @@ const props = defineProps({
     default: () => []
   }
 });
+
+const todayDate = new Intl.DateTimeFormat('en-US', {
+  month: 'short', day: 'numeric', year: 'numeric'
+}).format(new Date());
 </script>

@@ -110,10 +110,7 @@
           </div>
           <div class="field">
             <label class="field-lbl">Role *</label>
-            <select v-model="form.role" required class="field-inp">
-              <option value="">Select a role...</option>
-              <option v-for="role in availableRoles" :key="role.name" :value="role.name">{{ role.name }}</option>
-            </select>
+            <Select filter v-model="form.role" class="field-inp" :options="[{label: '{{ role.name }}', value: '{{ role.name }}'}]" optionLabel="label" optionValue="value" placeholder="Select a role..." />
           </div>
           <div v-if="formError" class="error-box">{{ formError }}</div>
           <div class="flex gap-3 mt-2">

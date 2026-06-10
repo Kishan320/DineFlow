@@ -16,12 +16,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b" style="border-color:var(--border)">
-        <select v-model="perPage" @change="resetAndLoad" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)">
-          <option :value="10">10</option>
-          <option :value="25">25</option>
-          <option :value="50">50</option>
-          <option :value="100">100</option>
-        </select>
+        <Select filter v-model="perPage" @change="resetAndLoad" class="border rounded-lg px-2 py-1.5 text-xs outline-none" style="background:var(--muted);border-color:var(--border);color:var(--foreground)" :options="[{label: '10', value: 10}, {label: '25', value: 25}, {label: '50', value: 50}, {label: '100', value: 100}]" optionLabel="label" optionValue="value" />
         <span class="text-xs" style="color:var(--muted-foreground)">entries per page</span>
         <div class="flex items-center gap-2 rounded-lg px-3 py-1.5 flex-1 min-w-[160px] max-w-xs ml-auto" style="background:var(--muted)">
           <SearchIcon :size="13" style="color:var(--muted-foreground)" />
