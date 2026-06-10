@@ -99,7 +99,6 @@ import { computed } from 'vue';
 import { X as XIcon } from '@lucide/vue';
 
 defineEmits(['close']);
-
 const now = new Date();
 const pad = n => String(n).padStart(2, '0');
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

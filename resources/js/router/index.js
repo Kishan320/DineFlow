@@ -2,6 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
 const routes = [
+  // ── Public landing page ───────────────────────────────────────────────────
+  {
+    path: '/home',
+    component: () => import('@/layouts/LandingLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'landing',
+        component: () => import('@/pages/landing/LandingPage.vue'),
+      },
+    ],
+  },
+
   // ── Guest-only routes ──────────────────────────────────────────────────────
   {
     path: '/login',

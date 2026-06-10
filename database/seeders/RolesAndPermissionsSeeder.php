@@ -202,6 +202,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'pos.customers.search',
         ]);
 
+        $delivery = Role::firstOrCreate(['name' => 'Customer', 'guard_name' => 'sanctum']);
+        $delivery->syncPermissions([
+            'items.view',
+            'dashboard.view',
+            'pos.orders.view',
+        ]);
+
         $this->command->info('✅ Roles & Permissions seeded: 43 permissions, 7 roles');
     }
 }
