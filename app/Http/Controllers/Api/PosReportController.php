@@ -34,6 +34,26 @@ class PosReportController extends Controller
         $date   = $request->date ?? now()->toDateString();
         $orders = $this->orderBase()->whereDate('created_at', $date)->whereNotIn('status', ['Cancelled'])->get();
 
+        $billData = [
+            'cash'   => ['amount' => $orders->where('payment_status', 'Paid')->whereNotIn('bill_pay_type', ['Guest'])->sum('net_payable'), 'bills' => $orders->where('payment_status', 'Paid')->whereNotIn('bill_pay_type', ['Guest'])->count()],
+            'credit' => ['amount' => $orders->where('payment_status', 'Unpaid')->sum('net_payable'), 'bills' => $orders->where('payment_status', 'Unpaid')->count()],
+            'guest'  => ['amount' => $orders->where('bill_pay_type', 'Guest')->sum('net_payable'), 'bills' => $orders->where('bill_pay_type', 'Guest')->count()],
+        ];
+
+        $salesData = [
+            'cash'  => ['amount' => $orders->sum('cash_amt'), 'bills' => $orders->where('cash_amt', '>', 0)->count()],
+            'card'  => ['amount' => $orders->sum('card_amt'), 'bills' => $orders->where('card_amt', '>', 0)->count()],
+            'other' => ['amount' => $orders->sum('upi_amt') + $orders->sum('others_amt'), 'bills' => $orders->filter(fn($o) => $o->upi_amt > 0 || $o->others_amt > 0)->count()],
+        ];
+
+        $orderTypeData = [
+            'dine_in'      => ['amount' => $orders->where('order_type', 'Dine In')->sum('net_payable'), 'bills' => $orders->where('order_type', 'Dine In')->count()],
+            'take_away'    => ['amount' => $orders->where('order_type', 'Takeaway')->sum('net_payable'), 'bills' => $orders->where('order_type', 'Takeaway')->count()],
+            'delivery'     => ['amount' => $orders->where('order_type', 'Delivery')->sum('net_payable'), 'bills' => $orders->where('order_type', 'Delivery')->count()],
+            'room_service' => ['amount' => $orders->where('order_type', 'Room Service')->sum('net_payable'), 'bills' => $orders->where('order_type', 'Room Service')->count()],
+            'bar_service'  => ['amount' => $orders->where('order_type', 'Bar Service')->sum('net_payable'), 'bills' => $orders->where('order_type', 'Bar Service')->count()],
+        ];
+
         return response()->json(['success' => true, 'data' => [
             'date'           => $date,
             'total_orders'   => $orders->count(),
@@ -44,6 +64,9 @@ class PosReportController extends Controller
             'total_card'     => $orders->sum('card_amt'),
             'total_upi'      => $orders->sum('upi_amt'),
             'total_others'   => $orders->sum('others_amt'),
+            'bill_data'      => $billData,
+            'sales_data'     => $salesData,
+            'order_type_data'=> $orderTypeData,
         ]]);
     }
 

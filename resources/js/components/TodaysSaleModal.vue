@@ -22,7 +22,10 @@
       </div>
 
       <!-- Table -->
-      <div class="flex-1 overflow-y-auto scrollbar-thin">
+      <div class="flex-1 overflow-y-auto scrollbar-thin relative">
+        <div v-if="loading" class="absolute inset-0 bg-card/80 backdrop-blur-sm z-10 flex items-center justify-center">
+          <span class="text-sm font-medium text-muted-foreground animate-pulse">Loading data...</span>
+        </div>
         <table class="w-full text-xs border-collapse">
           <thead>
             <tr style="background:var(--muted)">
@@ -95,8 +98,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { X as XIcon } from '@lucide/vue';
+import { posApi } from '@/services/settingsApi';
 
 defineEmits(['close']);
 const now = new Date();
@@ -110,36 +114,83 @@ function fmt(val) {
   return Number(val).toFixed(2);
 }
 
-// ── Dummy data matching screenshot ──────────────────────────────
-const billRows = [
-  { label: 'Cash Bill',   amount: 2054.00, bills: 2 },
-  { label: 'Credit Bill', amount: 0.00,    bills: 0 },
-  { label: 'Guest Bill',  amount: 0.00,    bills: 0 },
-];
+const loading = ref(true);
+
+const billRows = ref([
+  { label: 'Cash Bill',   amount: 0.00, bills: 0 },
+  { label: 'Credit Bill', amount: 0.00, bills: 0 },
+  { label: 'Guest Bill',  amount: 0.00, bills: 0 },
+]);
 const billTotal = computed(() => ({
-  amount: billRows.reduce((s, r) => s + r.amount, 0),
-  bills:  billRows.reduce((s, r) => s + r.bills,  0),
+  amount: billRows.value.reduce((s, r) => s + r.amount, 0),
+  bills:  billRows.value.reduce((s, r) => s + r.bills,  0),
 }));
 
-const salesRows = [
-  { label: 'Cash Sales',   amount: 1129.00, bills: 1 },
-  { label: 'Card Sales',   amount: 389.00,  bills: 1 },
-  { label: 'Other Sales',  amount: 0.00,    bills: 0 },
-];
+const salesRows = ref([
+  { label: 'Cash Sales',   amount: 0.00, bills: 0 },
+  { label: 'Card Sales',   amount: 0.00, bills: 0 },
+  { label: 'Other Sales',  amount: 0.00, bills: 0 },
+]);
 const salesTotal = computed(() => ({
-  amount: salesRows.reduce((s, r) => s + r.amount, 0),
-  bills:  salesRows.reduce((s, r) => s + r.bills,  0),
+  amount: salesRows.value.reduce((s, r) => s + r.amount, 0),
+  bills:  salesRows.value.reduce((s, r) => s + r.bills,  0),
 }));
 
-const orderTypeRows = [
-  { label: 'Dine In',      amount: 925.00,  bills: 2 },
-  { label: 'Take Away',    amount: 1129.00, bills: 1 },
-  { label: 'Delivery',     amount: 0.00,    bills: 0 },
-  { label: 'Room Service', amount: 0.00,    bills: 0 },
-  { label: 'Bar Service',  amount: 0.00,    bills: 0 },
-];
+const orderTypeRows = ref([
+  { label: 'Dine In',      amount: 0.00, bills: 0 },
+  { label: 'Take Away',    amount: 0.00, bills: 0 },
+  { label: 'Delivery',     amount: 0.00, bills: 0 },
+  { label: 'Room Service', amount: 0.00, bills: 0 },
+  { label: 'Bar Service',  amount: 0.00, bills: 0 },
+]);
 const orderTypeTotal = computed(() => ({
-  amount: orderTypeRows.reduce((s, r) => s + r.amount, 0),
-  bills:  orderTypeRows.reduce((s, r) => s + r.bills,  0),
+  amount: orderTypeRows.value.reduce((s, r) => s + r.amount, 0),
+  bills:  orderTypeRows.value.reduce((s, r) => s + r.bills,  0),
 }));
+
+onMounted(async () => {
+  try {
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
+    
+    const res = await posApi.dailySales(today);
+    
+    if (res && res.data) {
+      const bData = res.data.bill_data;
+      if (bData) {
+        billRows.value = [
+          { label: 'Cash Bill',   amount: bData.cash.amount,   bills: bData.cash.bills },
+          { label: 'Credit Bill', amount: bData.credit.amount, bills: bData.credit.bills },
+          { label: 'Guest Bill',  amount: bData.guest.amount,  bills: bData.guest.bills },
+        ];
+      }
+      
+      const sData = res.data.sales_data;
+      if (sData) {
+        salesRows.value = [
+          { label: 'Cash Sales',   amount: sData.cash.amount,  bills: sData.cash.bills },
+          { label: 'Card Sales',   amount: sData.card.amount,  bills: sData.card.bills },
+          { label: 'Other Sales',  amount: sData.other.amount, bills: sData.other.bills },
+        ];
+      }
+      
+      const oData = res.data.order_type_data;
+      if (oData) {
+        orderTypeRows.value = [
+          { label: 'Dine In',      amount: oData.dine_in.amount,      bills: oData.dine_in.bills },
+          { label: 'Take Away',    amount: oData.take_away.amount,    bills: oData.take_away.bills },
+          { label: 'Delivery',     amount: oData.delivery.amount,     bills: oData.delivery.bills },
+          { label: 'Room Service', amount: oData.room_service.amount, bills: oData.room_service.bills },
+          { label: 'Bar Service',  amount: oData.bar_service.amount,  bills: oData.bar_service.bills },
+        ];
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load today sales', error);
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
