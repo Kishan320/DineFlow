@@ -22,5 +22,6 @@ export default defineConfig({
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
+        allowedHosts: ['dineflow-odyr.onrender.com'],
     },
 });
