@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
         // Point password reset emails to the Vue frontend route
         ResetPassword::createUrlUsing(function ($user, string $token) {
             return config('app.url') . '/reset-password/' . $token . '?email=' . urlencode($user->email);
