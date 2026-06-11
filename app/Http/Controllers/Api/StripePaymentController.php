@@ -9,13 +9,23 @@ use Stripe\Stripe;
 
 class StripePaymentController extends Controller
 {
-    public function __construct()
+    private function initializeStripe()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $secret = \App\Models\Setting::forUser(auth()->id())
+            ->where('key', 'stripe_secret')
+            ->value('value');
+
+        if (!$secret) {
+            $secret = config('services.stripe.secret');
+        }
+
+        Stripe::setApiKey($secret);
     }
 
     public function createSession(Request $request)
     {
+        $this->initializeStripe();
+
         $request->validate([
             'amount' => 'required|numeric|min:0.5',
             'order_type' => 'required|string',
@@ -46,6 +56,8 @@ class StripePaymentController extends Controller
 
     public function paymentStatus(Request $request)
     {
+        $this->initializeStripe();
+
         $request->validate(['session_id' => 'required|string']);
 
         try {

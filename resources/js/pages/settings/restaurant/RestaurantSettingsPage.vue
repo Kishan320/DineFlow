@@ -81,6 +81,53 @@
           </div>
         </div>
 
+        <!-- Stripe Integration -->
+        <div class="border-t pt-5 mt-5" style="border-color:var(--border)">
+          <h3 class="text-sm font-semibold mb-4" style="color:var(--foreground)">Stripe Payment Gateway</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
+                Mode <span style="color:var(--danger)">*</span>
+              </label>
+              <Select filter
+                v-model="form.stripeMode"
+                :disabled="loading"
+                class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
+                style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
+               :options="[{label: 'Sandbox', value: 'sandbox'}, {label: 'Live', value: 'live'}]" optionLabel="label" optionValue="value" />
+            </div>
+            
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
+                Publishable Key <span style="color:var(--danger)">*</span>
+              </label>
+              <input
+                v-model="form.stripeKey"
+                type="text"
+                :disabled="loading"
+                placeholder="pk_test_..."
+                class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
+                style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
+              />
+            </div>
+          </div>
+          
+          <div class="mt-4">
+            <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
+              Secret Key <span style="color:var(--danger)">*</span>
+            </label>
+            <input
+              v-model="form.stripeSecret"
+              type="password"
+              :disabled="loading"
+              placeholder="sk_test_..."
+              class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
+              style="background:var(--muted);border-color:var(--border);color:var(--foreground)"
+            />
+          </div>
+        </div>
+
         <!-- Actions -->
         <div class="flex items-center gap-3 pt-2">
           <button
@@ -119,6 +166,9 @@ const form = ref({
   gstNo: '',
   billFooterText: '',
   guestBill: 'Disabled',
+  stripeMode: 'sandbox',
+  stripeKey: '',
+  stripeSecret: '',
 });
 
 async function loadSettings() {
@@ -132,6 +182,9 @@ async function loadSettings() {
         gstNo: response.data.gst_no,
         billFooterText: response.data.bill_footer_text,
         guestBill: response.data.guest_bill,
+        stripeMode: response.data.settings?.stripe_mode || 'sandbox',
+        stripeKey: response.data.settings?.stripe_key || '',
+        stripeSecret: response.data.settings?.stripe_secret || '',
       };
     }
     initialForm.value = JSON.stringify(form.value);
@@ -151,6 +204,11 @@ async function handleUpdate() {
       gst_no: form.value.gstNo,
       bill_footer_text: form.value.billFooterText,
       guest_bill: form.value.guestBill,
+      settings: {
+        stripe_mode: form.value.stripeMode,
+        stripe_key: form.value.stripeKey,
+        stripe_secret: form.value.stripeSecret,
+      }
     };
 
     await restaurantSettingsApi.update(payload);
