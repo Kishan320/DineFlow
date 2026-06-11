@@ -96,6 +96,14 @@
       @new-order="successOpen = false; lastOrder = null; activeTab = 'products'"
     />
 
+    <!-- Stripe Status Modal -->
+    <StripeStatusModal
+      v-if="stripeStatus"
+      :status="stripeStatus"
+      :cartData="{ itemCount: posStore.itemCount, netPayable: posStore.netPayable, billType: posStore.billType }"
+      @close="closeStripeModal"
+    />
+
   </div>
 </template>
 
@@ -109,7 +117,13 @@ import KOTModal          from './KOTModal.vue';
 import BillPreviewModal  from './BillPreviewModal.vue';
 import OrderSuccessModal from './OrderSuccessModal.vue';
 import OngoingOrdersPanel from './OngoingOrdersPanel.vue';
+import StripeStatusModal from '@/components/StripeStatusModal.vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useSnackbar } from '@/composables/useSnackbar';
 
+const route       = useRoute();
+const router      = useRouter();
+const snackbar    = useSnackbar();
 const posStore    = usePOSStore();
 const kotOpen     = ref(false);
 const billOpen    = ref(false);
@@ -118,6 +132,7 @@ const lastOrder   = ref(null);
 const activeTab   = ref('products');
 const kotOrder    = ref(null);
 const billOrder   = ref(null);
+const stripeStatus= ref(null);
 
 const isDesktop = ref(window.innerWidth >= 1024);
 function onResize() { isDesktop.value = window.innerWidth >= 1024; }
@@ -131,8 +146,17 @@ onMounted(async () => {
     posStore.loadWaiters(),
     posStore.loadOngoing(),
   ]);
+
+  if (route.query.stripe_cancel === '1') {
+    stripeStatus.value = 'cancelled';
+    router.replace({ path: '/pos-system' });
+  }
 });
 onUnmounted(() => window.removeEventListener('resize', onResize));
+
+function closeStripeModal() {
+  stripeStatus.value = null;
+}
 
 const tabs = [
   { id: 'products', label: 'Products', icon: LayoutGrid },

@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\StripePaymentController;
 
 // ── Guest routes (no auth required) ──────────────────────────────────────────
 // Register is restricted to first-user-only (handled in controller)
@@ -132,4 +133,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('users/{user}',                          [UserController::class, 'update']);
     Route::delete('users/{user}',                       [UserController::class, 'destroy']);
     Route::post('users/{user}/role',                    [UserController::class, 'assignRole']);
+
+    // ── Stripe ───────────────────────────────────────────────────────────────
+    Route::post('stripe/create-session',                [StripePaymentController::class, 'createSession']);
+    Route::post('stripe/payment-status',                [StripePaymentController::class, 'paymentStatus']);
 });

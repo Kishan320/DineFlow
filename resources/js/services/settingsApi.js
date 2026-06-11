@@ -105,4 +105,8 @@ export const posApi = {  // Products
   waiterSales:    (params)      => api.get('/pos/reports/waiters', { params }),
   tableSales:     (params)      => api.get('/pos/reports/tables', { params }),
   taxReport:      (params)      => api.get('/pos/reports/tax', { params }),
+
+  // Stripe
+  createStripeSession: (amount, order_type) => api.post('/stripe/create-session', { amount, order_type }),
+  verifyStripePayment: (session_id) => api.post('/stripe/payment-status', { session_id }),
 };

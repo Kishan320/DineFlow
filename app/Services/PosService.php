@@ -134,6 +134,9 @@ class PosService
                 $userId
             );
 
+            $paymentStatus = (($data['cash_amt'] ?? 0) + ($data['card_amt'] ?? 0) + ($data['upi_amt'] ?? 0) + ($data['others_amt'] ?? 0)) >= $totals['net_payable'] ? 'Paid' : 'Unpaid';
+            $orderStatus = $paymentStatus === 'Paid' ? 'Completed' : 'Pending';
+
             $order = PosOrder::create([
                 'created_by'       => $userId,
                 'order_no'         => $this->generateOrderNo(),
@@ -160,8 +163,8 @@ class PosService
                 'total'            => $totals['total'],
                 'round_off'        => $totals['round_off'],
                 'net_payable'      => $totals['net_payable'],
-                'status'           => 'Pending',
-                'payment_status'   => 'Unpaid',
+                'status'           => $orderStatus,
+                'payment_status'   => $paymentStatus,
                 'bill_pay_type'    => $data['bill_pay_type'] ?? 'Cash',
                 'cash_amt'         => $data['cash_amt'] ?? 0,
                 'card_ref'         => $data['card_ref'] ?? null,
@@ -208,22 +211,24 @@ class PosService
                     ->where('status', 'Open')
                     ->update(['status' => 'Closed', 'closed_at' => now()]);
 
-                TableSession::create([
-                    'table_id'     => $order->table_id,
-                    'pos_order_id' => $order->id,
-                    'order_no'     => $order->order_no,
-                    'status'       => 'Open',
-                    'covers'       => $order->covers,
-                    'waiter_id'    => $order->waiter_id,
-                    'waiter_name'  => $order->waiter_name,
-                    'opened_at'    => now(),
-                ]);
+                if ($orderStatus !== 'Completed') {
+                    TableSession::create([
+                        'table_id'     => $order->table_id,
+                        'pos_order_id' => $order->id,
+                        'order_no'     => $order->order_no,
+                        'status'       => 'Open',
+                        'covers'       => $order->covers,
+                        'waiter_id'    => $order->waiter_id,
+                        'waiter_name'  => $order->waiter_name,
+                        'opened_at'    => now(),
+                    ]);
+                }
             }
 
             OrderStatusHistory::create([
                 'pos_order_id' => $order->id,
                 'from_status'  => null,
-                'to_status'    => 'Pending',
+                'to_status'    => $orderStatus,
                 'changed_by'   => $data['last_accessed_by'] ?? 'Administrator',
             ]);
 

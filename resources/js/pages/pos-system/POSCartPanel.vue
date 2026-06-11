@@ -213,47 +213,6 @@
       <!-- Payment -->
       <div class="section-block">
         <div class="field">
-          <label class="field-lbl">BILL TYPE</label>
-          <div class="sel-wrap">
-            <Select filter v-model="posStore.billPayType" class="field-sel" :options="[{label: 'Cash', value: 'Cash'}, {label: 'Card', value: 'Card'}, {label: 'UPI', value: 'UPI'}, {label: 'Split', value: 'Split'}, {label: 'Others', value: 'Others'}]" optionLabel="label" optionValue="value" />
-            <ChevronDownIcon :size="12" class="sel-arr" />
-          </div>
-        </div>
-        <div class="field" style="margin-top:8px">
-          <label class="field-lbl">CASH</label>
-          <input v-model.number="posStore.cashAmt" type="number" min="0" placeholder="Amount by cash" class="field-inp" />
-        </div>
-        <div class="two-col" style="margin-top:8px">
-          <div class="field">
-            <label class="field-lbl">CARD REF NO.</label>
-            <input v-model="posStore.cardRef" type="text" placeholder="Reference No." class="field-inp" />
-          </div>
-          <div class="field">
-            <label class="field-lbl">CARD AMT</label>
-            <input v-model.number="posStore.cardAmt" type="number" min="0" class="field-inp" />
-          </div>
-        </div>
-        <div class="two-col" style="margin-top:8px">
-          <div class="field">
-            <label class="field-lbl">UPI REF</label>
-            <input v-model="posStore.upiRef" type="text" placeholder="UPI Ref" class="field-inp" />
-          </div>
-          <div class="field">
-            <label class="field-lbl">UPI AMT</label>
-            <input v-model.number="posStore.upiAmt" type="number" min="0" class="field-inp" />
-          </div>
-        </div>
-        <div class="two-col" style="margin-top:8px">
-          <div class="field">
-            <label class="field-lbl">OTHERS TYPE / REF</label>
-            <input v-model="posStore.othersType" type="text" placeholder="Type / Reference No." class="field-inp" />
-          </div>
-          <div class="field">
-            <label class="field-lbl">OTHERS AMT</label>
-            <input v-model.number="posStore.othersAmt" type="number" min="0" class="field-inp" />
-          </div>
-        </div>
-        <div class="field" style="margin-top:8px">
           <label class="field-lbl">PAYMENT NOTE</label>
           <textarea v-model="posStore.paymentNote" rows="2" placeholder="Payment note..." class="field-inp" style="resize:none" />
         </div>
@@ -292,7 +251,7 @@
         <CheckCircleIcon v-else :size="16" />
         {{ isPlacing ? 'Processing…' : 'Place Order' }}
       </button>
-      <button v-if="can('pos.orders.create')" class="place-btn pay-btn" style="margin-top:6px" :disabled="!hasItems || isPlacing" @click="handlePlace">
+      <button v-if="can('pos.orders.create')" class="place-btn pay-btn" style="margin-top:6px" :disabled="!hasItems || isPlacing" @click="handlePlaceStripe">
         Pay Now
       </button>
 
@@ -380,6 +339,21 @@ async function handlePlace() {
   try {
     await new Promise(r => setTimeout(r, 0)); // flush UI
     emit('place-order');
+  } finally {
+    isPlacing.value = false;
+  }
+}
+
+async function handlePlaceStripe() {
+  if (!hasItems.value) return;
+  isPlacing.value = true;
+  try {
+    const res = await posApi.createStripeSession(posStore.netPayable, posStore.billType);
+    if (res && res.checkout_url) {
+      window.location.href = res.checkout_url;
+    }
+  } catch (e) {
+    alert('Failed to initiate Stripe checkout');
   } finally {
     isPlacing.value = false;
   }
