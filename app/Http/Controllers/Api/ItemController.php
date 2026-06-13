@@ -117,7 +117,7 @@ class ItemController extends Controller
             'state' => 'required|in:On Sale,Off Sale',
             'item_type' => 'required|in:Physical Item,Digital Item,Service',
             'note' => 'nullable|string',
-            'image' => 'nullable|image|max:150',
+            'image' => 'nullable|image',
         ]);
 
         $data = [
