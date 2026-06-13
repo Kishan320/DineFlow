@@ -36,6 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
+    // ImageKit Auth
+    Route::get('/imagekit/auth', [\App\Http\Controllers\Api\ImageKitAuthController::class, 'getAuthenticationParameters']);
+
     // ── Dashboard ────────────────────────────────────────────────────────────
     Route::get('/dashboard', [DashboardController::class, 'index']);
 

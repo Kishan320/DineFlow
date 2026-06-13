@@ -65,7 +65,7 @@ class ItemController extends Controller
             'state' => 'required|in:On Sale,Off Sale',
             'item_type' => 'required|in:Physical Item,Digital Item,Service',
             'note' => 'nullable|string',
-            'image' => 'nullable|image',
+            'image_url' => 'nullable|string',
         ]);
 
         $data = [
@@ -81,12 +81,9 @@ class ItemController extends Controller
             'state' => $request->state,
             'item_type' => $request->item_type,
             'note' => $request->note,
+            'image_url' => $request->image_url,
             'last_accessed_by' => auth()->user()->name,
         ];
-
-        if ($request->hasFile('image')) {
-            $data['image_url'] = '/storage/'.$request->file('image')->store('items', 'public');
-        }
 
         $item = Item::create($data);
 
@@ -117,7 +114,7 @@ class ItemController extends Controller
             'state' => 'required|in:On Sale,Off Sale',
             'item_type' => 'required|in:Physical Item,Digital Item,Service',
             'note' => 'nullable|string',
-            'image' => 'nullable|image|max:150',
+            'image_url' => 'nullable|string',
         ]);
 
         $data = [
@@ -132,15 +129,9 @@ class ItemController extends Controller
             'state' => $request->state,
             'item_type' => $request->item_type,
             'note' => $request->note,
+            'image_url' => $request->image_url,
             'last_accessed_by' => auth()->user()->name,
         ];
-
-        if ($request->hasFile('image')) {
-            if ($item->image_url) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $item->image_url));
-            }
-            $data['image_url'] = '/storage/'.$request->file('image')->store('items', 'public');
-        }
 
         $item->update($data);
 
@@ -150,9 +141,6 @@ class ItemController extends Controller
     public function destroy($id)
     {
         $item = Item::forUser(auth()->id())->findOrFail($id);
-        if ($item->image_url) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $item->image_url));
-        }
         $item->delete();
 
         return response()->json(null, 204);
