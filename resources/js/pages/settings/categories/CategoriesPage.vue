@@ -179,14 +179,14 @@ const ActionRenderer = {
 };
 
 const columnDefs = [
-  { field: 'category_name', headerName: 'Category Name', flex: 1, sortable: true },
-  { field: 'description',   headerName: 'Description',   flex: 2, sortable: false },
-  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, sortable: true },
+  { field: 'category_name', headerName: 'Category Name', flex: 1, minWidth: 160, sortable: true },
+  { field: 'description',   headerName: 'Description',   flex: 2, minWidth: 200, sortable: false },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, minWidth: 150, sortable: true },
   {
-    field: 'updated_at', headerName: 'Updated At', flex: 1, sortable: true,
+    field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 160, sortable: true,
     valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
   },
-  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
+  { headerName: 'Actions', width: 100, minWidth: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
 const defaultColDef = { resizable: true, suppressMovable: true };

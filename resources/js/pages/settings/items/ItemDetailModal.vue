@@ -6,12 +6,12 @@
       @mousedown.self="$emit('close')"
     >
       <div
-        class="w-full max-w-lg rounded-xl shadow-2xl border"
+        class="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl shadow-2xl border"
         style="background:var(--card);border-color:var(--border)"
         @mousedown.stop
       >
         <!-- Header -->
-        <div class="flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border)">
+        <div class="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border)">
           <h2 class="text-sm font-semibold" style="color:var(--foreground)">Item Details</h2>
           <button @click="$emit('close')" class="p-1.5 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)">
             <XIcon :size="15" />
@@ -19,7 +19,7 @@
         </div>
 
         <!-- Body -->
-        <div class="p-5">
+        <div class="p-5 overflow-y-auto">
           <div v-if="loading" class="flex items-center justify-center py-8">
             <div class="animate-spin" style="color:var(--primary)">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,9 +34,9 @@
           <template v-else>
             <h3 class="text-base font-semibold mb-4" style="color:var(--foreground)">{{ item.item_name }}</h3>
 
-            <div class="flex gap-5">
+            <div class="flex flex-col sm:flex-row gap-5 sm:gap-6 items-center sm:items-start">
               <!-- Image -->
-              <div class="flex-shrink-0 w-28 h-28 rounded-lg border flex flex-col items-center justify-center" style="background:var(--muted);border-color:var(--border)">
+              <div class="flex-shrink-0 w-32 h-32 sm:w-28 sm:h-28 rounded-lg border flex flex-col items-center justify-center" style="background:var(--muted);border-color:var(--border)">
                 <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover rounded-lg" />
                 <template v-else>
                   <ImageOffIcon :size="28" style="color:var(--muted-foreground)" />
@@ -45,7 +45,7 @@
               </div>
 
               <!-- Details grid -->
-              <div class="flex-1 grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs">
+              <div class="flex-1 w-full grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div>
                   <p style="color:var(--muted-foreground)">Item Code</p>
                   <p class="font-semibold mt-0.5" style="color:var(--primary)">{{ item.code }}</p>
@@ -86,7 +86,7 @@
             </div>
 
             <!-- Footer meta -->
-            <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs" style="border-color:var(--border);color:var(--muted-foreground)">
+            <div class="mt-4 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center sm:text-left" style="border-color:var(--border);color:var(--muted-foreground)">
               <span>Created on {{ item.created_at ? new Date(item.created_at).toLocaleString('en-IN') : 'N/A' }}</span>
               <span>Last Accessed by : {{ item.last_accessed_by }}</span>
             </div>

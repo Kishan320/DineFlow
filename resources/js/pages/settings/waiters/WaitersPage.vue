@@ -161,16 +161,16 @@ const ActionRenderer = {
 };
 
 const columnDefs = [
-  { field: 'waiter_code', headerName: 'Waiter Code', flex: 0.9, sortable: true },
-  { field: 'name', headerName: 'Name', flex: 1.2, sortable: true },
-  { field: 'mobile', headerName: 'Mobile', flex: 1, sortable: true },
-  { field: 'dob', headerName: 'DOB', flex: 0.9, sortable: true },
-  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, sortable: true },
+  { field: 'waiter_code', headerName: 'Waiter Code', flex: 0.9, minWidth: 120, sortable: true },
+  { field: 'name', headerName: 'Name', flex: 1.2, minWidth: 180, sortable: true },
+  { field: 'mobile', headerName: 'Mobile', flex: 1, minWidth: 140, sortable: true },
+  { field: 'dob', headerName: 'DOB', flex: 0.9, minWidth: 120, sortable: true },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, minWidth: 160, sortable: true },
   {
-    field: 'updated_at', headerName: 'Updated At', flex: 1.2, sortable: true,
+    field: 'updated_at', headerName: 'Updated At', flex: 1.2, minWidth: 160, sortable: true,
     valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
   },
-  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
+  { headerName: 'Actions', width: 100, minWidth: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
 const defaultColDef = { resizable: true, suppressMovable: true };

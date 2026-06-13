@@ -162,20 +162,20 @@ const ActionRenderer = {
 };
 
 const columnDefs = [
-  { field: 'code', headerName: 'Code', flex: 0.8, sortable: true },
-  { field: 'company_name', headerName: 'Company Name', flex: 1.2, sortable: true },
-  { field: 'contact_person', headerName: 'Contact Person', flex: 1, sortable: true },
-  { field: 'email', headerName: 'Email', flex: 1.2, sortable: true },
-  { field: 'mobile', headerName: 'Mobile', flex: 0.9, sortable: true },
-  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 0.9, sortable: true },
+  { field: 'code', headerName: 'Code', flex: 0.8, minWidth: 120, sortable: true },
+  { field: 'company_name', headerName: 'Company Name', flex: 1.2, minWidth: 180, sortable: true },
+  { field: 'contact_person', headerName: 'Contact Person', flex: 1, minWidth: 160, sortable: true },
+  { field: 'email', headerName: 'Email', flex: 1.2, minWidth: 200, sortable: true },
+  { field: 'mobile', headerName: 'Mobile', flex: 0.9, minWidth: 140, sortable: true },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 0.9, minWidth: 160, sortable: true },
   {
-    field: 'updated_at', headerName: 'Updated At', flex: 1, sortable: true,
+    field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 160, sortable: true,
     valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
   },
-  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
+  { headerName: 'Actions', width: 100, minWidth: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
-const defaultColDef = { resizable: true, suppressMovable: true, minWidth: 100 };
+const defaultColDef = { resizable: true, suppressMovable: true };
 
 const gridHeight = computed(() => {
   const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
@@ -200,7 +200,7 @@ const pageNumbers = computed(() => {
 });
 
 function onGridReady(params) {
-  // Let flex handle sizing automatically
+  params.api.sizeColumnsToFit();
 }
 
 async function load() {

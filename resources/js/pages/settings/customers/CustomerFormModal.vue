@@ -22,7 +22,7 @@
         <div class="overflow-y-auto" style="max-height:calc(100vh - 160px)">
           <form @submit.prevent="submit" class="p-5 space-y-4">
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
                   Customer Code <span style="color:var(--danger)">*</span>
@@ -49,7 +49,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Contact Person</label>
                 <input v-model="form.contact_person" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -60,7 +60,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Mobile</label>
                 <input v-model="form.mobile" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -79,7 +79,7 @@
             <!-- Billing Address -->
             <div class="pt-2">
               <h3 class="text-xs font-semibold mb-3" style="color:var(--foreground)">Billing Address</h3>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Name</label>
                   <input v-model="form.billing_name" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -89,7 +89,7 @@
                   <input v-model="form.billing_address" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Address 2</label>
                   <input v-model="form.billing_address2" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -99,7 +99,7 @@
                   <input v-model="form.billing_city" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
                 </div>
               </div>
-              <div class="grid grid-cols-3 gap-4 mt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">State</label>
                   <input v-model="form.billing_state" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -124,7 +124,7 @@
             <!-- Shipping Address (conditional) -->
             <div v-if="!form.same_as_billing" class="pt-2">
               <h3 class="text-xs font-semibold mb-3" style="color:var(--foreground)">Shipping Address</h3>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Name</label>
                   <input v-model="form.shipping_name" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -134,7 +134,7 @@
                   <input v-model="form.shipping_address" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Address 2</label>
                   <input v-model="form.shipping_address2" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
@@ -144,7 +144,7 @@
                   <input v-model="form.shipping_city" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
                 </div>
               </div>
-              <div class="grid grid-cols-3 gap-4 mt-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">State</label>
                   <input v-model="form.shipping_state" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />

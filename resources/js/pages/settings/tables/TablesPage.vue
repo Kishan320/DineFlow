@@ -161,18 +161,18 @@ const ActionRenderer = {
 };
 
 const columnDefs = [
-  { field: 'table_name', headerName: 'Table Name', flex: 1, sortable: true },
-  { field: 'description', headerName: 'Description', flex: 1.2, sortable: true },
-  { field: 'max_seats', headerName: 'Max Seats', flex: 0.7, sortable: true },
-  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, sortable: true },
+  { field: 'table_name', headerName: 'Table Name', flex: 1, minWidth: 140, sortable: true },
+  { field: 'description', headerName: 'Description', flex: 1.2, minWidth: 180, sortable: true },
+  { field: 'max_seats', headerName: 'Max Seats', flex: 0.7, minWidth: 120, sortable: true },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, minWidth: 160, sortable: true },
   {
-    field: 'updated_at', headerName: 'Updated At', flex: 1.2, sortable: true,
+    field: 'updated_at', headerName: 'Updated At', flex: 1.2, minWidth: 160, sortable: true,
     valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
   },
-  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
+  { headerName: 'Actions', width: 100, minWidth: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
-const defaultColDef = { resizable: true, suppressMovable: true, minWidth: 100 };
+const defaultColDef = { resizable: true, suppressMovable: true };
 
 const gridHeight = computed(() => {
   const h = 38 + Math.max(1, rows.value.length) * 40 + 2;
@@ -197,7 +197,7 @@ const pageNumbers = computed(() => {
 });
 
 function onGridReady(params) {
-  // Let flex handle sizing automatically
+  params.api.sizeColumnsToFit();
 }
 
 async function load() {

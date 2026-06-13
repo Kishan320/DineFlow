@@ -161,17 +161,17 @@ const ActionRenderer = {
 };
 
 const columnDefs = [
-  { field: 'hsn_code', headerName: 'HSN Code', flex: 0.8, sortable: true },
-  { field: 'description', headerName: 'Description', flex: 1.2, sortable: true },
-  { field: 'tax_percent', headerName: 'Tax %', flex: 0.7, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
-  { field: 'cgst', headerName: 'CGST %', flex: 0.7, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
-  { field: 'sgst', headerName: 'SGST %', flex: 0.7, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
-  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, sortable: true },
+  { field: 'hsn_code', headerName: 'HSN Code', flex: 0.8, minWidth: 120, sortable: true },
+  { field: 'description', headerName: 'Description', flex: 1.2, minWidth: 180, sortable: true },
+  { field: 'tax_percent', headerName: 'Tax %', flex: 0.7, minWidth: 100, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
+  { field: 'cgst', headerName: 'CGST %', flex: 0.7, minWidth: 100, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
+  { field: 'sgst', headerName: 'SGST %', flex: 0.7, minWidth: 100, sortable: true, valueFormatter: p => parseFloat(p.value).toFixed(2) },
+  { field: 'last_accessed_by', headerName: 'Last Accessed By', flex: 1, minWidth: 160, sortable: true },
   {
-    field: 'updated_at', headerName: 'Updated At', flex: 1.2, sortable: true,
+    field: 'updated_at', headerName: 'Updated At', flex: 1.2, minWidth: 160, sortable: true,
     valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-IN') : '',
   },
-  { headerName: 'Actions', width: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
+  { headerName: 'Actions', width: 100, minWidth: 100, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
 const defaultColDef = { resizable: true, suppressMovable: true };

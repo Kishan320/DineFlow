@@ -239,7 +239,7 @@ const columnDefs = [
   { headerName: 'Actions',      width: 130, sortable: false, cellRenderer: ActionRenderer, suppressSizeToFit: true },
 ];
 
-const defaultColDef = { resizable: true, suppressMovable: true };
+const defaultColDef = { resizable: true, suppressMovable: true, minWidth: 150 };
 
 // Dynamic height
 const gridHeight = computed(() => {
@@ -265,7 +265,7 @@ const pageNumbers = computed(() => {
 });
 
 function onGridReady(params) {
-  params.api.sizeColumnsToFit();
+  // Let flex handle sizing on desktop, and horizontal scroll on mobile
 }
 
 async function load() {

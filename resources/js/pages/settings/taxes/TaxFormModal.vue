@@ -49,7 +49,7 @@
               <p v-if="errors.description" class="text-xs mt-1" style="color:var(--danger)">{{ errors.description }}</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
                   CGST (%) <span style="color:var(--danger)">*</span>
@@ -80,7 +80,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">IGST (%)</label>
                 <input
@@ -105,7 +105,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Additional Cess (%)</label>
                 <input

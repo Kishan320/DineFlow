@@ -27,16 +27,16 @@
           <button
             v-for="role in roles" :key="role.id"
             @click="selectRole(role)"
-            :class="['w-full text-left flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-sm', selectedRole?.id === role.id ? 'bg-primary text-white' : 'hover:bg-muted']"
-            :style="selectedRole?.id === role.id ? '' : 'color:var(--foreground)'"
+            :class="['w-full text-left flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-sm', selectedRole?.id === role.id ? 'shadow-sm' : 'hover:bg-muted']"
+            :style="selectedRole?.id === role.id ? 'background:var(--primary);color:var(--primary-foreground)' : 'color:var(--foreground)'"
           >
             <div>
               <p class="font-semibold text-sm">{{ role.name }}</p>
-              <p class="text-xs mt-0.5" :style="selectedRole?.id === role.id ? 'opacity:.75' : 'color:var(--muted-foreground)'">
+              <p class="text-xs mt-0.5" :style="selectedRole?.id === role.id ? 'opacity:.8' : 'color:var(--muted-foreground)'">
                 {{ role.permissions_count }} permissions
               </p>
             </div>
-            <ChevronRightIcon :size="14" :style="selectedRole?.id === role.id ? 'opacity:.75' : 'color:var(--muted-foreground)'" />
+            <ChevronRightIcon :size="14" :style="selectedRole?.id === role.id ? 'opacity:.8' : 'color:var(--muted-foreground)'" />
           </button>
         </div>
       </div>
@@ -82,9 +82,9 @@
                   {{ isModuleFullyChecked(perms) ? 'Deselect All' : 'Select All' }}
                 </button>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <label v-for="perm in perms" :key="perm"
-                  :class="['flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer border transition-all text-xs',
+                  :class="['flex min-w-0 items-center gap-2 px-3 py-2 rounded-lg cursor-pointer border transition-all text-xs',
                     checkedPermissions.has(perm)
                       ? 'border-primary bg-primary/10'
                       : 'border-border hover:border-muted-foreground'
@@ -96,7 +96,7 @@
                     @change="togglePerm(perm)"
                     class="accent-primary w-3.5 h-3.5 flex-shrink-0"
                   />
-                  <span :style="checkedPermissions.has(perm) ? 'color:var(--primary)' : 'color:var(--foreground)'">
+                  <span class="truncate flex-1 min-w-0" :title="perm.split('.').slice(1).join('.') || perm" :style="checkedPermissions.has(perm) ? 'color:var(--primary)' : 'color:var(--foreground)'">
                     {{ perm.split('.').slice(1).join('.') || perm }}
                   </span>
                 </label>
