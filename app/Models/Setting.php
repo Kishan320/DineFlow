@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class Setting extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'key',
         'value',
