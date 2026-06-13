@@ -66,10 +66,8 @@ class RestaurantSettingsController extends Controller
             $settings = RestaurantSettings::forUser($userId)->first();
 
             if (! $settings) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Restaurant settings not found',
-                ], 404);
+                $settings = new RestaurantSettings;
+                $settings->created_by = $userId;
             }
 
             // Restaurant settings update
