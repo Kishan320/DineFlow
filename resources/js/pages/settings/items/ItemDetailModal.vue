@@ -108,8 +108,8 @@ import { ImageKitProvider, Image as IKImage } from '@imagekit/vue';
 const props = defineProps({ itemId: { type: Number, required: true } });
 defineEmits(['close']);
 
-const imagekitUrl = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/dineflowimages';
-const imagekitPublicKey = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY || 'public_pD9H64ZwHoNJiHtBSQcedPGbiJw=';
+const imagekitUrl = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || '';
+const imagekitPublicKey = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY || '11';
 
 const item = ref(null);
 const loading = ref(false);
