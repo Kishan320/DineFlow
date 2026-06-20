@@ -55,25 +55,48 @@
                 <input v-model="form.contact_person" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
               </div>
               <div>
-                <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Email</label>
-                <input v-model="form.email" type="email" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
+                <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
+                  Email <span style="color:var(--danger)">*</span>
+                </label>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
+                  :style="`background:var(--background);border-color:${errors.email ? 'var(--danger)' : 'var(--border)'};color:var(--foreground)`"
+                />
+                <p v-if="errors.email" class="text-xs mt-1" style="color:var(--danger)">{{ errors.email }}</p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
+                <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">
+                  Password <span v-if="!customer" style="color:var(--danger)">*</span>
+                  <span v-else class="text-[10px] text-gray-400 ml-1">(Leave empty to keep current)</span>
+                </label>
+                <input
+                  v-model="form.password"
+                  type="password"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none"
+                  :style="`background:var(--background);border-color:${errors.password ? 'var(--danger)' : 'var(--border)'};color:var(--foreground)`"
+                />
+                <p v-if="errors.password" class="text-xs mt-1" style="color:var(--danger)">{{ errors.password }}</p>
+              </div>
+              <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Mobile</label>
                 <input v-model="form.mobile" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
               </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Tax Number</label>
                 <input v-model="form.tax_number" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
               </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Payment Terms</label>
-              <input v-model="form.payment_terms" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
+              <div>
+                <label class="block text-xs font-medium mb-1.5" style="color:var(--foreground)">Payment Terms</label>
+                <input v-model="form.payment_terms" type="text" class="w-full border rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--background);border-color:var(--border);color:var(--foreground)" />
+              </div>
             </div>
 
             <!-- Billing Address -->
@@ -184,12 +207,21 @@ import * as yup from 'yup';
 
 const props = defineProps({ customer: { type: Object, default: null } });
 const emit  = defineEmits(['close', 'save']);
-
 const schema = yup.object({
   code:              yup.string().required('Code is required').max(50),
   company_name:      yup.string().required('Company name is required').max(255),
   contact_person:    yup.string().nullable().max(255),
-  email:             yup.string().nullable().email().max(255),
+  email:             yup.string().required('Email is required for user account').email().max(255),
+  password:          yup.string().nullable().test(
+    'password-required',
+    'Password is required (min 6 characters) for new customers',
+    function (value) {
+      if (!props.customer) {
+        return !!value && value.length >= 6;
+      }
+      return !value || value.length >= 6;
+    }
+  ),
   mobile:            yup.string().nullable().max(20),
   tax_number:        yup.string().nullable().max(100),
   payment_terms:     yup.string().nullable().max(50),
@@ -212,7 +244,8 @@ const schema = yup.object({
 });
 
 const blankForm = () => ({
-  code: '', company_name: '', contact_person: '', email: '', mobile: '', tax_number: '',
+  user_id: null,
+  code: '', company_name: '', contact_person: '', email: '', password: '', mobile: '', tax_number: '',
   payment_terms: '', billing_name: '', billing_address: '', billing_address2: '',
   billing_city: '', billing_state: '', billing_country: '', billing_zip: '',
   same_as_billing: true, shipping_name: '', shipping_address: '', shipping_address2: '',
@@ -223,8 +256,14 @@ const form   = reactive(blankForm());
 const errors = reactive({});
 
 watch(() => props.customer, (c) => {
-  if (c) Object.assign(form, c);
-  else   Object.assign(form, blankForm());
+  if (c) {
+    const blank = blankForm();
+    Object.keys(blank).forEach(key => {
+      form[key] = (c[key] !== null && c[key] !== undefined) ? c[key] : blank[key];
+    });
+  } else {
+    Object.assign(form, blankForm());
+  }
   Object.keys(errors).forEach(k => delete errors[k]);
 }, { immediate: true });
 
