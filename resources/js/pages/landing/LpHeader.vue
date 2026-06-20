@@ -48,7 +48,7 @@
         <!-- Dashboard link (authenticated users) -->
         <button
           v-if="authStore.isAuthenticated"
-          @click="router.push('/')"
+          @click="router.push('/dashboard')"
           class="hidden sm:flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-full border transition-all duration-200"
           :style="{ borderColor: 'var(--lp-border)', color: scrolled ? 'var(--lp-primary)' : '#fff', background: scrolled ? 'var(--lp-muted)' : 'rgba(255,255,255,0.1)' }"
         >

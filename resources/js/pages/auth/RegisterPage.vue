@@ -124,7 +124,7 @@ async function submit() {
   try {
     await authStore.register({ ...form });
     snackbar.success('Account created successfully!');
-    router.push('/');
+    router.push('/dashboard');
   } catch (e) {
     serverError.value = e?.message || 'Registration failed. Please try again.';
   }

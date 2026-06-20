@@ -104,7 +104,7 @@ const allNavItems = [
     id: 'nav-dashboard',
     label: 'Dashboard',
     iconName: 'LayoutDashboard',
-    href: '/',
+    href: '/dashboard',
     permission: 'dashboard.view',
   },
   {

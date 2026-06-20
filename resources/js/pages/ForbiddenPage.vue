@@ -14,7 +14,7 @@
           style="border-color:var(--border);color:var(--foreground)">
           Go Back
         </button>
-        <button @click="router.push('/')"
+        <button @click="router.push('/dashboard')"
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           style="background:var(--primary);color:var(--primary-foreground)">
           Dashboard

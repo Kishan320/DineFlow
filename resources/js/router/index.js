@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 const routes = [
   // ── Public landing page ───────────────────────────────────────────────────
   {
-    path: '/home',
+    path: '/',
     component: () => import('@/layouts/LandingLayout.vue'),
     children: [
       {
@@ -48,7 +48,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       {
-        path: '',
+        path: 'dashboard',
         name: 'dashboard',
         component: () => import('@/pages/DashboardPage.vue'),
         meta: { permission: 'dashboard.view' },

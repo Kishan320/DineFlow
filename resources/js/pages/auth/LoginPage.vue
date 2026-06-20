@@ -92,7 +92,7 @@ async function submit() {
   try {
     await authStore.login({ email: form.email, password: form.password });
     snackbar.success('Welcome back!');
-    router.push('/');
+    router.push('/dashboard');
   } catch (e) {
     serverError.value = e?.message || 'Login failed. Please try again.';
   }
