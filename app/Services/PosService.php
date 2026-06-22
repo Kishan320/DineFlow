@@ -222,6 +222,9 @@ class PosService
                         'waiter_name'  => $order->waiter_name,
                         'opened_at'    => now(),
                     ]);
+                    \App\Models\RestaurantTable::where('id', $order->table_id)->update(['status' => 'Occupied']);
+                } else {
+                    \App\Models\RestaurantTable::where('id', $order->table_id)->update(['status' => 'Available']);
                 }
             }
 
@@ -291,6 +294,8 @@ class PosService
                 TableSession::where('pos_order_id', $order->id)
                     ->where('status', 'Open')
                     ->update(['status' => 'Closed', 'closed_at' => now()]);
+                
+                \App\Models\RestaurantTable::where('id', $order->table_id)->update(['status' => 'Available']);
             }
 
             return $order->fresh(['items', 'kots', 'statusHistories']);

@@ -136,7 +136,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex items-center gap-0.5">
                   <button @click="viewOrder = order" class="p-1.5 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)" title="View"><EyeIcon :size="14" /></button>
                   <button @click="printOrder(order)" class="p-1.5 rounded-lg hover:bg-muted transition-colors" style="color:var(--muted-foreground)" title="Print"><PrinterIcon :size="14" /></button>
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Stripe;
@@ -11,11 +12,11 @@ class StripePaymentController extends Controller
 {
     private function initializeStripe()
     {
-        $secret = \App\Models\Setting::forUser(auth()->id())
+        $secret = Setting::forUser(auth()->id())
             ->where('key', 'stripe_secret')
             ->value('value');
 
-        if (!$secret) {
+        if (! $secret) {
             $secret = config('services.stripe.secret');
         }
 
@@ -70,7 +71,7 @@ class StripePaymentController extends Controller
                 return response()->json([
                     'success' => true,
                     'payment_intent_id' => $session->payment_intent->id ?? $session->payment_intent,
-                    'receipt_url'       => $session->invoice->invoice_pdf ?? null,
+                    'receipt_url' => $session->invoice->invoice_pdf ?? null,
                 ]);
             }
 

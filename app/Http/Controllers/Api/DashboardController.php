@@ -43,12 +43,12 @@ class DashboardController extends Controller
         // Today's Revenue
         $revenueToday = PosOrder::forUser($userId)
             ->whereDate('created_at', $today)
-            ->where('status', 'paid')
+            ->where('payment_status', 'Paid')
             ->sum('net_payable');
 
         $revenueYesterday = PosOrder::forUser($userId)
             ->whereDate('created_at', $yesterday)
-            ->where('status', 'paid')
+            ->where('payment_status', 'Paid')
             ->sum('net_payable');
 
         $revenueChange = $this->calculateChange($revenueToday, $revenueYesterday);
@@ -176,7 +176,7 @@ class DashboardController extends Controller
         // Hourly Sales Data
         $hourlySalesRaw = PosOrder::forUser($userId)
             ->whereDate('created_at', $today)
-            ->where('status', 'paid')
+            ->where('payment_status', 'Paid')
             ->select(
                 DB::raw('HOUR(created_at) as hour'),
                 DB::raw('COUNT(*) as orders'),
