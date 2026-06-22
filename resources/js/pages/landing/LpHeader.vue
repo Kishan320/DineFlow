@@ -88,13 +88,12 @@
     </div>
   </nav>
 
-  <!-- Mobile Menu Overlay -->
   <div
-    class="fixed inset-0 z-40 lg:hidden transition-all duration-500"
+    class="fixed inset-0 z-40 lg:hidden transition-all duration-500 overflow-y-auto"
     :class="mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
     style="backdrop-filter:blur(20px);background:rgba(15,13,11,0.92)"
   >
-    <div class="flex flex-col items-center justify-center h-full gap-8 px-6">
+    <div class="flex flex-col items-center justify-center min-h-full py-20 gap-5 px-6">
       <button
         v-for="(link, i) in navLinks"
         :key="link.href"
@@ -107,6 +106,25 @@
       <button @click="scrollTo('#reservation')" class="lp-btn-primary px-8 py-3 text-base mt-4 gap-2">
         <CalendarIcon :size="18" color="white" />
         Book a Table
+      </button>
+
+      <button
+        v-if="authStore.isAuthenticated"
+        @click="router.push('/dashboard'); mobileOpen = false;"
+        class="flex items-center gap-2 px-8 py-3 text-base font-semibold rounded-full border transition-all duration-200"
+        style="border-color: var(--lp-border); color: #fff; background: rgba(255,255,255,0.05)"
+      >
+        <DashboardIcon :size="18" />
+        Dashboard
+      </button>
+      <button
+        v-else
+        @click="router.push('/login'); mobileOpen = false;"
+        class="flex items-center gap-2 px-8 py-3 text-base font-semibold rounded-full border transition-all duration-200"
+        style="border-color: var(--lp-border); color: #fff; background: rgba(255,255,255,0.05)"
+      >
+        <LogIn :size="18" />
+        Login
       </button>
     </div>
   </div>
