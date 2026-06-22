@@ -29,7 +29,7 @@
           </h1>
 
           <p class="hero-anim text-lg text-white/75 max-w-lg leading-relaxed font-medium">
-            From the tandoors of Punjab to the coastal kitchens of Kerala — every plate at LuxeDine tells a story centuries in the making.
+            From the tandoors of Punjab to the coastal kitchens of Kerala — every plate at DineFlow tells a story centuries in the making.
           </p>
 
           <div class="hero-anim flex flex-wrap gap-4">
