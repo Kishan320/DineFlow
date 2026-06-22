@@ -7,13 +7,13 @@
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
       <!-- Logo -->
-      <button @click="scrollTop" class="flex items-center gap-2 group" aria-label="LuxeDine Home">
+      <button @click="scrollTop" class="flex items-center gap-2 group" aria-label="DineFlow Home">
         <div class="w-9 h-9 rounded-xl lp-gradient-bg-gold flex items-center justify-center shrink-0">
-          <span class="text-white font-bold text-base">L</span>
+          <span class="text-white font-bold text-base">D</span>
         </div>
         <span class="lp-font-disp text-xl font-semibold tracking-tight group-hover:text-[var(--lp-primary)] transition-colors"
               :style="{ color: scrolled ? 'var(--lp-fg)' : '#fff' }">
-          LuxeDine
+          DineFlow
         </span>
       </button>
 
