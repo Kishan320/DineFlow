@@ -50,8 +50,8 @@ const openIndex = ref(0);
 
 const faqs = [
   { q: 'Do you accommodate dietary restrictions and allergies?',       a: 'Absolutely. We offer Jain, vegan, gluten-free, and nut-free preparations for all our dishes. Please inform us at the time of reservation and our chefs will ensure your meal is prepared with care.' },
-  { q: 'Is there a dress code at LuxeDine?',                           a: 'We maintain a smart-casual to formal dress code. We request guests to refrain from sportswear and flip-flops. For Chef\'s Table experiences, formal attire is preferred.' },
-  { q: 'Can I host a private event or corporate dinner?',              a: 'Yes. Our private dining room seats up to 20 guests and our full restaurant can be booked exclusively for groups of 80+. Contact us at events@luxedine.in for customized packages.' },
+  { q: 'Is there a dress code at DineFlow?',                           a: 'We maintain a smart-casual to formal dress code. We request guests to refrain from sportswear and flip-flops. For Chef\'s Table experiences, formal attire is preferred.' },
+  { q: 'Can I host a private event or corporate dinner?',              a: 'Yes. Our private dining room seats up to 20 guests and our full restaurant can be booked exclusively for groups of 80+. Contact us at events@dineflow.in for customized packages.' },
   { q: 'How far in advance should I make a reservation?',             a: 'We recommend booking at least 3 days in advance for weekday dinners and 7–10 days for weekends. For Chef\'s Table, we suggest booking 2–3 weeks ahead as spots are extremely limited.' },
   { q: 'Do you offer valet parking?',                                  a: 'Yes, complimentary valet parking is available for all dinner reservations. For lunch, paid parking is available in the adjacent Connaught Place underground complex.' },
   { q: 'Can I bring my own cake for a celebration?',                   a: 'You are welcome to bring an external cake for a corkage fee of ₹500. Alternatively, our pastry team can create a custom celebration cake with 48 hours notice.' },
