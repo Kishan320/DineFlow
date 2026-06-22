@@ -36,7 +36,7 @@
         <div class="space-y-8">
           <div class="lp-reveal lp-stagger-1">
             <p class="text-lg leading-relaxed mb-6" style="color:var(--lp-muted-fg)">
-              Founded in 2006 by Chef Arjun Malhotra and his wife Priya, LuxeDine began as a humble 12-table restaurant in Connaught Place. Today, it stands as New Delhi's most celebrated fine-dining destination — a place where culinary tradition meets contemporary artistry.
+              Founded in 2006 by Chef Arjun Malhotra and his wife Priya, DineFlow began as a humble 12-table restaurant in Connaught Place. Today, it stands as New Delhi's most celebrated fine-dining destination — a place where culinary tradition meets contemporary artistry.
             </p>
             <p class="text-lg leading-relaxed" style="color:var(--lp-muted-fg)">
               Our kitchen sources ingredients from 40+ partner farms across India, ensuring that every spice, every vegetable, and every cut of meat carries the integrity of its origin directly to your table.
@@ -51,7 +51,7 @@
             <div>
               <p class="lp-font-disp italic text-lg" style="color:var(--lp-primary)">"Cooking is remembering who you are."</p>
               <p class="text-sm font-semibold mt-1" style="color:var(--lp-fg)">Chef Arjun Malhotra</p>
-              <p class="text-xs" style="color:var(--lp-muted-fg)">Founder & Executive Chef, LuxeDine</p>
+              <p class="text-xs" style="color:var(--lp-muted-fg)">Founder & Executive Chef, DineFlow</p>
             </div>
           </div>
 
