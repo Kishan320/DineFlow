@@ -14,7 +14,7 @@
         <!-- Left: Image + Info -->
         <div class="lp-reveal space-y-6">
           <div class="relative rounded-2xl overflow-hidden aspect-[4/3]">
-            <LpImage src="https://img.rocket.new/generatedImages/rocket_gen_img_186321a6e-1772087389567.png" alt="Elegant restaurant dining room" :fill="true" class="object-cover" />
+            <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-15.png" alt="Elegant restaurant dining room" :fill="true" class="object-cover" />
             <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)" />
             <div class="absolute bottom-6 left-6 right-6 lp-glass-card rounded-xl p-4">
               <p class="text-white lp-font-disp italic text-lg">"A table reserved is a memory in the making."</p>

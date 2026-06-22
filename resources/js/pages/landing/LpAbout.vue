@@ -16,18 +16,18 @@
         <div class="lp-reveal grid grid-cols-2 gap-4">
           <div class="space-y-4">
             <div class="rounded-2xl overflow-hidden aspect-[3/4] shadow-lg">
-              <LpImage src="https://images.unsplash.com/photo-1543340713-0f7f0abf9e49" alt="Beautifully plated fine dining dish" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-1.jpg" alt="Beautifully plated fine dining dish" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
             <div class="rounded-2xl overflow-hidden aspect-square shadow-lg">
-              <LpImage src="https://img.rocket.new/generatedImages/rocket_gen_img_1076a5b80-1774103238331.png" alt="Restaurant dining room with warm candlelit ambiance" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-2.png" alt="Restaurant dining room with warm candlelit ambiance" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
           </div>
           <div class="space-y-4 pt-10">
             <div class="rounded-2xl overflow-hidden aspect-square shadow-lg">
-              <LpImage src="https://img.rocket.new/generatedImages/rocket_gen_img_17aa23708-1772214570411.png" alt="Chef garnishing a dish" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-3.png" alt="Chef garnishing a dish" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
             <div class="rounded-2xl overflow-hidden aspect-[3/4] shadow-lg">
-              <LpImage src="https://img.rocket.new/generatedImages/rocket_gen_img_1fcffea7f-1772156505295.png" alt="Artisan Indian thali" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-4.png" alt="Artisan Indian thali" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
           </div>
         </div>
@@ -46,7 +46,7 @@
           <!-- Chef Quote Card -->
           <div class="lp-reveal lp-stagger-2 lp-glass-card rounded-2xl p-6 flex items-center gap-5">
             <div class="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2" style="border-color:rgba(200,150,90,0.3)">
-              <LpImage src="https://img.rocket.new/generatedImages/rocket_gen_img_1bce5c231-1772182221732.png" alt="Head chef portrait" class="w-full h-full object-cover" />
+              <LpImage src="https://ik.imagekit.io/dineflowimages/landing/image-5.png" alt="Head chef portrait" class="w-full h-full object-cover" />
             </div>
             <div>
               <p class="lp-font-disp italic text-lg" style="color:var(--lp-primary)">"Cooking is remembering who you are."</p>

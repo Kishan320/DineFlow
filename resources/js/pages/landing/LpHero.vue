@@ -3,7 +3,7 @@
     <!-- Parallax Background -->
     <div ref="bgRef" class="absolute inset-0 z-0" style="transform-origin:top center">
       <LpImage
-        src="https://img.rocket.new/generatedImages/rocket_gen_img_1517867ae-1774737643947.png"
+        src="https://ik.imagekit.io/dineflowimages/landing/image-21.png"
         alt="Elegant fine dining restaurant interior with warm amber lighting"
         :fill="true"
         :priority="true"

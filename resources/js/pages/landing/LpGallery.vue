@@ -61,14 +61,14 @@ useReveal(sectionRef, { threshold: 0.05 });
 const lightbox = ref(null);
 
 const galleryItems = [
-  { id: 1, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_186321a6e-1772087389567.png',  alt: 'Elegant restaurant dining room',           span: 'lp-masonry-tall' },
-  { id: 2, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_1fcffea7f-1772156505295.png',  alt: 'Colorful Indian thali top-down view',       span: 'lp-masonry-wide' },
-  { id: 3, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_1791b975e-1772056118364.png',  alt: 'Intimate private dining room',              span: '' },
-  { id: 4, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_15df498c3-1780547421918.png',  alt: 'Chef carefully plating a dish',             span: 'lp-masonry-tall' },
-  { id: 5, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_190ccd77e-1772204466828.png',  alt: 'Artistically plated fine dining dish',      span: '' },
-  { id: 6, src: 'https://images.unsplash.com/photo-1709364937384-1f30a49a8269',                       alt: 'Multiple small plates on marble table',     span: 'lp-masonry-wide' },
-  { id: 7, src: 'https://images.unsplash.com/photo-1667470256325-5e55a6a3b7cf',                       alt: 'Elegant dessert plating',                   span: '' },
-  { id: 8, src: 'https://img.rocket.new/generatedImages/rocket_gen_img_1feffe525-1773087928627.png',  alt: 'Golden mango lassi in tall glass',          span: 'lp-masonry-tall' },
+  { id: 1, src: 'https://ik.imagekit.io/dineflowimages/landing/image-15.png',  alt: 'Elegant restaurant dining room',           span: 'lp-masonry-tall' },
+  { id: 2, src: 'https://ik.imagekit.io/dineflowimages/landing/image-4.png',  alt: 'Colorful Indian thali top-down view',       span: 'lp-masonry-wide' },
+  { id: 3, src: 'https://ik.imagekit.io/dineflowimages/landing/image-16.png',  alt: 'Intimate private dining room',              span: '' },
+  { id: 4, src: 'https://ik.imagekit.io/dineflowimages/landing/image-17.png',  alt: 'Chef carefully plating a dish',             span: 'lp-masonry-tall' },
+  { id: 5, src: 'https://ik.imagekit.io/dineflowimages/landing/image-18.png',  alt: 'Artistically plated fine dining dish',      span: '' },
+  { id: 6, src: 'https://ik.imagekit.io/dineflowimages/landing/image-19.jpg',                       alt: 'Multiple small plates on marble table',     span: 'lp-masonry-wide' },
+  { id: 7, src: 'https://ik.imagekit.io/dineflowimages/landing/image-20.jpg',                       alt: 'Elegant dessert plating',                   span: '' },
+  { id: 8, src: 'https://ik.imagekit.io/dineflowimages/landing/image-14.png',  alt: 'Golden mango lassi in tall glass',          span: 'lp-masonry-tall' },
 ];
 
 function onKeydown(e) { if (e.key === 'Escape') lightbox.value = null; }
