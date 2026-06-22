@@ -8,9 +8,9 @@
         <div class="flex flex-col gap-4 max-w-xs">
           <div class="flex items-center gap-2">
             <div class="w-9 h-9 rounded-xl lp-gradient-bg-gold flex items-center justify-center shrink-0">
-              <span class="text-white font-bold text-base">L</span>
+              <span class="text-white font-bold text-base">D</span>
             </div>
-            <span class="lp-font-disp text-xl font-semibold tracking-tight" style="color:var(--lp-fg)">LuxeDine</span>
+            <span class="lp-font-disp text-xl font-semibold tracking-tight" style="color:var(--lp-fg)">DineFlow</span>
           </div>
           <p class="text-sm leading-relaxed" style="color:var(--lp-muted-fg)">
             Where every meal becomes a cherished memory. Fine dining redefined in the heart of New Delhi.
@@ -53,7 +53,7 @@
       <div class="lp-gold-divider mb-6" />
 
       <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-        <p class="text-sm" style="color:var(--lp-muted-fg)">© {{ year }} LuxeDine. Crafted with care in New Delhi.</p>
+        <p class="text-sm" style="color:var(--lp-muted-fg)">© {{ year }} DineFlow. Crafted with care in New Delhi.</p>
         <div class="flex items-center gap-6 text-xs font-medium" style="color:var(--lp-muted-fg)">
           <a href="#" class="transition-colors hover:text-[var(--lp-primary)]">Privacy</a>
           <a href="#" class="transition-colors hover:text-[var(--lp-primary)]">Terms</a>
