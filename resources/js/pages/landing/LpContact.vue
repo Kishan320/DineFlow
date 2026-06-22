@@ -50,7 +50,7 @@
               style="border:0;filter:saturate(0.8) contrast(1.05)"
               allowfullscreen loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
-              title="LuxeDine Location — Connaught Place, New Delhi"
+              title="DineFlow Location — Connaught Place, New Delhi"
             />
           </div>
         </div>
@@ -71,7 +71,7 @@ useReveal(sectionRef);
 const contactDetails = [
   { icon: MapPinIcon, label: 'Address',      value: '12, Janpath, Connaught Place, New Delhi — 110001', link: 'https://maps.google.com' },
   { icon: PhoneIcon,  label: 'Reservations', value: '+91 11 4567 8900',   link: 'tel:+911145678900' },
-  { icon: MailIcon,   label: 'Email',        value: 'hello@luxedine.in',  link: 'mailto:hello@luxedine.in' },
+  { icon: MailIcon,   label: 'Email',        value: 'hello@dineflow.in',  link: 'mailto:hello@dineflow.in' },
   { icon: ClockIcon,  label: 'Hours',        value: 'Lunch: 12–3pm · Dinner: 7–11pm · Daily', link: null },
 ];
 
