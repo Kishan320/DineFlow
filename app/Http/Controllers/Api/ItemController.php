@@ -24,7 +24,7 @@ class ItemController extends Controller
         $perPage = in_array((int) $request->per_page, [10, 25, 50, 100]) ? (int) $request->per_page : 10;
         $search = trim($request->get('search', ''));
 
-        $query = Item::forUser($userId)
+        $query = Item::withPermissionCheck()
             ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'bar_price', 'room_price', 'state', 'item_type', 'last_accessed_by', 'updated_at'])
             ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('item_name', 'LIKE', "%{$search}%")
@@ -92,7 +92,7 @@ class ItemController extends Controller
 
     public function show($id)
     {
-        $item = Item::forUser(auth()->id())->findOrFail($id);
+        $item = Item::withPermissionCheck()->findOrFail($id);
 
         return response()->json($item);
     }
@@ -100,7 +100,7 @@ class ItemController extends Controller
     public function update(Request $request, $id)
     {
         $userId = auth()->id();
-        $item = Item::forUser($userId)->findOrFail($id);
+        $item = Item::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('items')->where('created_by', $userId)->ignore($item->id)],
@@ -140,7 +140,7 @@ class ItemController extends Controller
 
     public function destroy($id)
     {
-        $item = Item::forUser(auth()->id())->findOrFail($id);
+        $item = Item::withPermissionCheck()->findOrFail($id);
         $item->delete();
 
         return response()->json(null, 204);

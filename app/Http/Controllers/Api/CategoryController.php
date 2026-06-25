@@ -22,7 +22,7 @@ class CategoryController extends Controller
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
         $search  = trim($request->get('search', ''));
 
-        $query = Category::forUser($userId)
+        $query = Category::withPermissionCheck()
             ->select(['id', 'category_name', 'description', 'last_accessed_by', 'updated_at'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('category_name', 'LIKE', "%{$search}%")
@@ -47,7 +47,7 @@ class CategoryController extends Controller
 
     public function list()
     {
-        $categories = Category::forUser(auth()->id())
+        $categories = Category::withPermissionCheck()
             ->select('id', 'category_name')
             ->orderBy('category_name')
             ->get();
@@ -78,7 +78,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $userId   = auth()->id();
-        $category = Category::forUser($userId)->findOrFail($id);
+        $category = Category::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'category_name' => [
@@ -99,7 +99,7 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
-        $category = Category::forUser(auth()->id())->findOrFail($id);
+        $category = Category::withPermissionCheck()->findOrFail($id);
         $category->delete();
         return response()->json(null, 204);
     }

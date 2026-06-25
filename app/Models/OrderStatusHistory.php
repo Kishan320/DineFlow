@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderStatusHistory extends Model
+class OrderStatusHistory extends BaseModel
 {
     protected $table = 'order_status_histories';
 

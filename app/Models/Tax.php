@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class Tax extends Model
+class Tax extends BaseModel
 {
-    use BelongsToUser;
 
     protected $fillable = [
         'created_by', 'hsn_code', 'description', 'cgst', 'sgst', 'igst',

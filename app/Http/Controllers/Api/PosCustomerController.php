@@ -19,7 +19,7 @@ class PosCustomerController extends Controller
         $userId = auth()->id();
         $search = trim($request->search ?? '');
 
-        $customers = Customer::forUser($userId)
+        $customers = Customer::withPermissionCheck()
             ->select(['id', 'code', 'company_name', 'contact_person', 'mobile', 'email', 'billing_address', 'billing_city'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('company_name', 'like', "%{$search}%")
@@ -55,7 +55,7 @@ class PosCustomerController extends Controller
             'billing_address' => 'nullable|string|max:500',
         ]);
 
-        $count    = Customer::forUser($userId)->count();
+        $count    = Customer::withPermissionCheck()->count();
         $customer = Customer::create([
             'created_by'      => $userId,
             'code'            => 'CUST-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT),

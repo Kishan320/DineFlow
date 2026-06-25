@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class Customer extends Model
+class Customer extends BaseModel
 {
-    use BelongsToUser;
 
     protected $fillable = [
         'user_id', 'created_by', 'code', 'company_name', 'contact_person', 'email', 'mobile', 'tax_number',

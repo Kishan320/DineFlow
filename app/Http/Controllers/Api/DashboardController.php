@@ -28,12 +28,12 @@ class DashboardController extends Controller
 
         // 1. KPI Data
         // Today's Orders
-        $ordersTodayCount = PosOrder::forUser($userId)
+        $ordersTodayCount = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('status', '!=', 'cancelled')
             ->count();
 
-        $ordersYesterdayCount = PosOrder::forUser($userId)
+        $ordersYesterdayCount = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $yesterday)
             ->where('status', '!=', 'cancelled')
             ->count();
@@ -41,12 +41,12 @@ class DashboardController extends Controller
         $ordersChange = $this->calculateChange($ordersTodayCount, $ordersYesterdayCount);
 
         // Today's Revenue
-        $revenueToday = PosOrder::forUser($userId)
+        $revenueToday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('payment_status', 'Paid')
             ->sum('net_payable');
 
-        $revenueYesterday = PosOrder::forUser($userId)
+        $revenueYesterday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $yesterday)
             ->where('payment_status', 'Paid')
             ->sum('net_payable');
@@ -54,29 +54,29 @@ class DashboardController extends Controller
         $revenueChange = $this->calculateChange($revenueToday, $revenueYesterday);
 
         // Active Tables
-        $totalTables = RestaurantTable::forUser($userId)->count();
-        $activeTables = RestaurantTable::forUser($userId)->where('status', 'Occupied')->count();
+        $totalTables = RestaurantTable::withPermissionCheck()->count();
+        $activeTables = RestaurantTable::withPermissionCheck()->where('status', 'Occupied')->count();
 
         // Customers Today (unique customers + walk-ins counted as 1 each if they don't have customer_id)
-        $customersToday = PosOrder::forUser($userId)
+        $customersToday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('status', '!=', 'cancelled')
             ->distinct('customer_id')
             ->count('customer_id');
         // Add walkins
-        $walkinsToday = PosOrder::forUser($userId)
+        $walkinsToday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('status', '!=', 'cancelled')
             ->whereNull('customer_id')
             ->count();
         $totalCustomersToday = $customersToday + $walkinsToday;
 
-        $customersYesterday = PosOrder::forUser($userId)
+        $customersYesterday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $yesterday)
             ->where('status', '!=', 'cancelled')
             ->distinct('customer_id')
             ->count('customer_id');
-        $walkinsYesterday = PosOrder::forUser($userId)
+        $walkinsYesterday = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $yesterday)
             ->where('status', '!=', 'cancelled')
             ->whereNull('customer_id')
@@ -91,12 +91,12 @@ class DashboardController extends Controller
         $aovChange = $this->calculateChange($aovToday, $aovYesterday);
 
         // Pending Bills
-        $pendingBillsCount = PosOrder::forUser($userId)
+        $pendingBillsCount = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('status', 'pending')
             ->count();
 
-        $pendingBillsAmount = PosOrder::forUser($userId)
+        $pendingBillsAmount = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('status', 'pending')
             ->sum('net_payable');
@@ -174,7 +174,7 @@ class DashboardController extends Controller
 
         // 2. Charts Data
         // Hourly Sales Data
-        $hourlySalesRaw = PosOrder::forUser($userId)
+        $hourlySalesRaw = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->where('payment_status', 'Paid')
             ->select(
@@ -199,7 +199,7 @@ class DashboardController extends Controller
 
         // Weekly Sales Data
         $startOfWeek = Carbon::now()->startOfWeek();
-        $weeklySalesRaw = PosOrder::forUser($userId)
+        $weeklySalesRaw = PosOrder::withPermissionCheck()
             ->whereBetween('created_at', [$startOfWeek, Carbon::now()->endOfWeek()])
             ->where('status', 'paid')
             ->select(
@@ -251,7 +251,7 @@ class DashboardController extends Controller
         });
 
         // 4. Recent Orders
-        $recentOrdersRaw = PosOrder::forUser($userId)
+        $recentOrdersRaw = PosOrder::withPermissionCheck()
             ->whereDate('created_at', $today)
             ->orderBy('created_at', 'desc')
             ->limit(10)

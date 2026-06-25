@@ -23,7 +23,7 @@ class PosProductController extends Controller
         $search = trim($request->search ?? '');
         $category = trim($request->category ?? '');
 
-        $query = Item::forUser($userId)
+        $query = Item::withPermissionCheck()
             ->select(['id', 'code', 'item_name', 'category', 'restaurant_price', 'tax_type', 'tax', 'state', 'image_url', 'note'])
             ->where('state', 'On Sale')
             ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
@@ -48,7 +48,7 @@ class PosProductController extends Controller
 
     public function categories()
     {
-        $categories = Category::forUser(auth()->id())
+        $categories = Category::withPermissionCheck()
             ->orderBy('category_name')
             ->select(['id', 'category_name'])
             ->get()
@@ -63,7 +63,7 @@ class PosProductController extends Controller
         if ($item->tax && is_numeric($item->tax)) {
             $taxPercent = (float) $item->tax;
         } elseif ($item->tax) {
-            $tax = Tax::forUser(auth()->id())
+            $tax = Tax::withPermissionCheck()
                 ->where(fn ($q) => $q->where('description', $item->tax)->orWhere('hsn_code', $item->tax))
                 ->first();
             if ($tax) {

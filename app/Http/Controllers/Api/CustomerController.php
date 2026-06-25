@@ -26,7 +26,7 @@ class CustomerController extends Controller
         $perPage = in_array((int) $request->per_page, [10, 25, 50, 100]) ? (int) $request->per_page : 10;
         $search = trim($request->get('search', ''));
 
-        $query = Customer::forUser($userId)
+        $query = Customer::withPermissionCheck()
             ->select('*')
             ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('company_name', 'LIKE', "%{$search}%")
@@ -123,7 +123,7 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         $userId = auth()->id();
-        $customer = Customer::forUser($userId)->findOrFail($id);
+        $customer = Customer::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('customers')->where('created_by', $userId)->ignore($customer->id)],
@@ -202,7 +202,7 @@ class CustomerController extends Controller
 
     public function destroy($id)
     {
-        $customer = Customer::forUser(auth()->id())->findOrFail($id);
+        $customer = Customer::withPermissionCheck()->findOrFail($id);
 
         DB::beginTransaction();
         try {

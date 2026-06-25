@@ -23,7 +23,7 @@ class TaxController extends Controller
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
         $search  = trim($request->get('search', ''));
 
-        $query = Tax::forUser($userId)
+        $query = Tax::withPermissionCheck()
             ->select(['id', 'hsn_code', 'description', 'cgst', 'sgst', 'igst', 'tax_percent', 'last_accessed_by', 'updated_at'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('hsn_code', 'LIKE', "%{$search}%")
@@ -48,7 +48,7 @@ class TaxController extends Controller
 
     public function list()
     {
-        $taxes = Tax::forUser(auth()->id())
+        $taxes = Tax::withPermissionCheck()
             ->select('id', 'description', 'tax_percent')
             ->orderBy('description')
             ->get();
@@ -81,7 +81,7 @@ class TaxController extends Controller
     public function update(Request $request, $id)
     {
         $userId = auth()->id();
-        $tax    = Tax::forUser($userId)->findOrFail($id);
+        $tax    = Tax::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'hsn_code'        => ['required', 'string', 'max:50', Rule::unique('taxes')->where('created_by', $userId)->ignore($tax->id)],
@@ -105,7 +105,7 @@ class TaxController extends Controller
 
     public function destroy($id)
     {
-        $tax = Tax::forUser(auth()->id())->findOrFail($id);
+        $tax = Tax::withPermissionCheck()->findOrFail($id);
         $tax->delete();
         return response()->json(null, 204);
     }

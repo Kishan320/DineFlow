@@ -20,7 +20,7 @@ class RestaurantSettingsController extends Controller
     {
         $userId = auth()->id();
 
-        $restaurantSettings = RestaurantSettings::forUser($userId)->first();
+        $restaurantSettings = RestaurantSettings::withPermissionCheck()->first();
 
         // Fetch stripe settings
         $stripeSettings = Setting::where('created_by', $userId)
@@ -63,7 +63,7 @@ class RestaurantSettingsController extends Controller
         try {
             $userId = auth()->id();
 
-            $settings = RestaurantSettings::forUser($userId)->first();
+            $settings = RestaurantSettings::withPermissionCheck()->first();
 
             if (! $settings) {
                 $settings = new RestaurantSettings;

@@ -23,7 +23,7 @@ class WaiterController extends Controller
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
         $search  = trim($request->get('search', ''));
 
-        $query = Waiter::forUser($userId)
+        $query = Waiter::withPermissionCheck()
             ->select(['id', 'waiter_code', 'name', 'mobile', 'dob', 'last_accessed_by', 'updated_at'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
@@ -72,7 +72,7 @@ class WaiterController extends Controller
     public function update(Request $request, $id)
     {
         $userId = auth()->id();
-        $waiter = Waiter::forUser($userId)->findOrFail($id);
+        $waiter = Waiter::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'waiter_code' => ['required', 'string', 'max:50', Rule::unique('waiters')->where('created_by', $userId)->ignore($waiter->id)],
@@ -94,7 +94,7 @@ class WaiterController extends Controller
 
     public function destroy($id)
     {
-        $waiter = Waiter::forUser(auth()->id())->findOrFail($id);
+        $waiter = Waiter::withPermissionCheck()->findOrFail($id);
         $waiter->delete();
         return response()->json(null, 204);
     }

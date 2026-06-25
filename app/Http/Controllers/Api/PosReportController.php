@@ -18,7 +18,7 @@ class PosReportController extends Controller
 
     private function orderBase(): \Illuminate\Database\Eloquent\Builder
     {
-        return PosOrder::forUser(auth()->id());
+        return PosOrder::withPermissionCheck();
     }
 
     private function orderItemBase(string $from, string $to): \Illuminate\Database\Eloquent\Builder
@@ -198,9 +198,9 @@ class PosReportController extends Controller
 
     public function billData($orderId)
     {
-        $posOrder = PosOrder::forUser(auth()->id())->findOrFail($orderId);
+        $posOrder = PosOrder::withPermissionCheck()->findOrFail($orderId);
         $posOrder->load(['items', 'kots.items']);
-        $settings = RestaurantSettings::forUser(auth()->id())->first();
+        $settings = RestaurantSettings::withPermissionCheck()->first();
 
         return response()->json(['success' => true, 'order' => $posOrder, 'settings' => $settings]);
     }

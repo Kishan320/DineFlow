@@ -23,7 +23,7 @@ class PosOrderController extends Controller
         $userId  = auth()->id();
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 25;
 
-        $query = PosOrder::forUser($userId)
+        $query = PosOrder::withPermissionCheck()
             ->with(['items'])
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('order_no', 'like', "%{$request->search}%")
@@ -104,7 +104,7 @@ class PosOrderController extends Controller
 
     public function show($id)
     {
-        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        $order = PosOrder::withPermissionCheck()->findOrFail($id);
         $order->load(['items', 'kots.items', 'statusHistories']);
         return response()->json(['success' => true, 'data' => $order]);
     }
@@ -115,14 +115,14 @@ class PosOrderController extends Controller
             'status' => 'required|in:Pending,Confirmed,Preparing,Ready,Served,Completed,Cancelled',
         ]);
 
-        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        $order = PosOrder::withPermissionCheck()->findOrFail($id);
         $order = $this->posService->updateOrderStatus($order, $request->status, auth()->user()->name);
         return response()->json(['success' => true, 'data' => $order]);
     }
 
     public function ongoing()
     {
-        $orders = PosOrder::forUser(auth()->id())
+        $orders = PosOrder::withPermissionCheck()
             ->with(['items'])
             ->whereNotIn('status', ['Completed', 'Cancelled'])
             ->orderByDesc('id')
@@ -132,7 +132,7 @@ class PosOrderController extends Controller
 
     public function destroy($id)
     {
-        $order = PosOrder::forUser(auth()->id())->findOrFail($id);
+        $order = PosOrder::withPermissionCheck()->findOrFail($id);
         if (!in_array($order->status, ['Pending', 'Cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Only pending or cancelled orders can be deleted'], 422);
         }

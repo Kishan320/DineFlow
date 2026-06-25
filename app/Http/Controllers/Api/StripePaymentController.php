@@ -12,7 +12,7 @@ class StripePaymentController extends Controller
 {
     private function initializeStripe()
     {
-        $secret = Setting::forUser(auth()->id())
+        $secret = Setting::withPermissionCheck()
             ->where('key', 'stripe_secret')
             ->value('value');
 

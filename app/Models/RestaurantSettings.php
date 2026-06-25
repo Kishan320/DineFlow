@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class RestaurantSettings extends Model
+class RestaurantSettings extends BaseModel
 {
-    use BelongsToUser;
 
     protected $table = 'restaurant_settings';
 

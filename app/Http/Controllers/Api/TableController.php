@@ -23,7 +23,7 @@ class TableController extends Controller
         $perPage = in_array((int)$request->per_page, [10, 25, 50, 100]) ? (int)$request->per_page : 10;
         $search  = trim($request->get('search', ''));
 
-        $query = RestaurantTable::forUser($userId)
+        $query = RestaurantTable::withPermissionCheck()
             ->select(['id', 'table_name', 'description', 'max_seats', 'last_accessed_by', 'updated_at'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('table_name', 'LIKE', "%{$search}%")
@@ -69,7 +69,7 @@ class TableController extends Controller
     public function update(Request $request, $id)
     {
         $userId = auth()->id();
-        $table  = RestaurantTable::forUser($userId)->findOrFail($id);
+        $table  = RestaurantTable::withPermissionCheck()->findOrFail($id);
 
         $request->validate([
             'table_name'  => ['required', 'string', 'max:100', Rule::unique('restaurant_tables')->where('created_by', $userId)->ignore($table->id)],
@@ -89,7 +89,7 @@ class TableController extends Controller
 
     public function destroy($id)
     {
-        $table = RestaurantTable::forUser(auth()->id())->findOrFail($id);
+        $table = RestaurantTable::withPermissionCheck()->findOrFail($id);
         $table->delete();
         return response()->json(null, 204);
     }

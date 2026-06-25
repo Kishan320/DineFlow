@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class PosKotItem extends Model
+class PosKotItem extends BaseModel
 {
     protected $table = 'pos_kot_items';
 

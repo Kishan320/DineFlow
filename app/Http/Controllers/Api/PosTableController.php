@@ -18,7 +18,7 @@ class PosTableController extends Controller
     public function index()
     {
         $userId = auth()->id();
-        $tables = RestaurantTable::forUser($userId)->orderBy('table_name')->get();
+        $tables = RestaurantTable::withPermissionCheck()->orderBy('table_name')->get();
 
         $openSessions = TableSession::whereHas('table', fn($q) => $q->where('created_by', $userId))
             ->where('status', 'Open')
@@ -44,7 +44,7 @@ class PosTableController extends Controller
 
     public function waiters()
     {
-        $waiters = Waiter::forUser(auth()->id())
+        $waiters = Waiter::withPermissionCheck()
             ->orderBy('name')
             ->select(['id', 'name', 'waiter_code', 'mobile'])
             ->get();

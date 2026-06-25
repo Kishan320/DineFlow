@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class TableSession extends Model
+class TableSession extends BaseModel
 {
     protected $table = 'table_sessions';
 

@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToUser;
 
-class Setting extends Model
+class Setting extends BaseModel
 {
-    use BelongsToUser;
 
     protected $fillable = [
         'key',

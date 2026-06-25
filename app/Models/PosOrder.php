@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 
-class PosOrder extends Model
+class PosOrder extends BaseModel
 {
-    use BelongsToUser;
 
     protected $table = 'pos_orders';
 

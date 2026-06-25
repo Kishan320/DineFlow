@@ -33,7 +33,7 @@ class ReportController extends Controller
 
     private function orderBase(Request $request, string $from, string $to): \Illuminate\Database\Eloquent\Builder
     {
-        $query = PosOrder::forUser(auth()->id())
+        $query = PosOrder::withPermissionCheck()
             ->whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->whereNotIn('status', ['Cancelled']);
             

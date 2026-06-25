@@ -28,7 +28,7 @@ class PosKotController extends Controller
             'notes'                 => 'nullable|string',
         ]);
 
-        $posOrder = PosOrder::forUser(auth()->id())->findOrFail($orderId);
+        $posOrder = PosOrder::withPermissionCheck()->findOrFail($orderId);
 
         $kot = $this->posService->generateKot($posOrder, $request->kot_items, $request->notes);
         return response()->json(['success' => true, 'data' => $kot], 201);
@@ -36,7 +36,7 @@ class PosKotController extends Controller
 
     public function index($orderId)
     {
-        $posOrder = PosOrder::forUser(auth()->id())->findOrFail($orderId);
+        $posOrder = PosOrder::withPermissionCheck()->findOrFail($orderId);
         $kots     = $posOrder->kots()->with('items')->orderBy('id')->get();
         return response()->json(['success' => true, 'data' => $kots]);
     }
@@ -45,7 +45,7 @@ class PosKotController extends Controller
     {
         $request->validate(['status' => 'required|in:Pending,Preparing,Ready,Served']);
 
-        PosOrder::forUser(auth()->id())->findOrFail($posKot->pos_order_id);
+        PosOrder::withPermissionCheck()->findOrFail($posKot->pos_order_id);
 
         $posKot->update(['status' => $request->status]);
         return response()->json(['success' => true, 'data' => $posKot->fresh('items')]);
